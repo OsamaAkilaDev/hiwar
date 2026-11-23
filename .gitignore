@@ -17,3 +17,6 @@ worker-configuration.d.ts
 .impeccable/questions/
 .impeccable/decision-*.json
 .impeccable/review/
+
+# scratch files
+*.tmp.*

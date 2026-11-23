@@ -24,16 +24,27 @@ export function providersFromEnv(env: Env): Provider[] {
   });
 }
 
-type Options = { signal: AbortSignal; firstTokenTimeoutMs?: number };
+type Options = {
+  signal: AbortSignal;
+  firstTokenTimeoutMs?: number;
+  lastProviderTimeoutMs?: number;
+};
 
 export async function* streamChat(
   providers: Provider[],
   messages: ChatMessage[],
-  { signal, firstTokenTimeoutMs = 3000 }: Options,
+  {
+    signal,
+    firstTokenTimeoutMs = 3000,
+    lastProviderTimeoutMs = 15_000,
+  }: Options,
 ): AsyncGenerator<{ provider: Provider; text: string }> {
   const failures: string[] = [];
 
-  for (const provider of providers) {
+  for (const [i, provider] of providers.entries()) {
+    // A short cutoff only pays off when another provider can take over.
+    const timeoutMs =
+      i < providers.length - 1 ? firstTokenTimeoutMs : lastProviderTimeoutMs;
     signal.throwIfAborted();
     const attempt = new AbortController();
     const abort = () => attempt.abort();
@@ -47,8 +58,8 @@ export async function* streamChat(
     try {
       const timeout = new Promise<never>((_, reject) => {
         timer = setTimeout(
-          () => reject(new Error(`no token within ${firstTokenTimeoutMs}ms`)),
-          firstTokenTimeoutMs,
+          () => reject(new Error(`no token within ${timeoutMs}ms`)),
+          timeoutMs,
         );
       });
       const next = iterator.next();

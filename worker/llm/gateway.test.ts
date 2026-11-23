@@ -84,3 +84,17 @@ test("falls through when first provider ends without a token", async () => {
   );
   expect(out).toEqual(["ok"]);
 });
+
+test("waits longer for the last provider, since nothing can take over", async () => {
+  const slow = fake("slow", async function* () {
+    await Bun.sleep(100);
+    yield "late";
+  });
+  const out = await collect(
+    streamChat([slow], messages, {
+      signal: new AbortController().signal,
+      firstTokenTimeoutMs: 50,
+    }),
+  );
+  expect(out).toEqual(["late"]);
+});
