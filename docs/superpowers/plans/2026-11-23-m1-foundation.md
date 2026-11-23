@@ -50,7 +50,6 @@
 
 **Files:** Create `package.json`, `vite.config.ts`, `wrangler.jsonc`, `tsconfig.json`, `index.html`, `src/main.tsx`, `src/styles/app.css`, `worker/index.ts`, `.gitignore`, `.dev.vars.example`, `.gitattributes`, `biome.json`.
 
-
 **Interfaces:**
 
 - Produces: `worker/index.ts` exports `default` Hono app typed `Hono<{ Bindings: Env }>`; `Env` = `{ HYPERDRIVE: Hyperdrive; GEMINI_API_KEY: string; GEMINI_MODEL: string; LLM_PROVIDERS: string }` (generated via `wrangler types`).
