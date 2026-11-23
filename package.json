@@ -17,13 +17,16 @@
     "postinstall": "wrangler types --env-file .dev.vars.example"
   },
   "dependencies": {
+    "@tanstack/react-query": "^5.108.3",
     "drizzle-orm": "^0.45.4",
     "hono": "^4.13.20",
     "openai": "^7.62.0",
     "postgres": "^4.1.1",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
-    "zod": "^4.6.7"
+    "uuid": "^14.0.3",
+    "zod": "^4.6.7",
+    "zustand": "^5.1.0"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.6.8",
