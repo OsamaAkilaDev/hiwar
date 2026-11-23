@@ -33,123 +33,131 @@ export const chat = new Hono<{ Bindings: Env }>().post(
     const { conversationId, userMessageId, assistantMessageId, text, locale } =
       parsed.data;
 
-    return streamSSE(c, async (stream) => {
-      const startedAt = Date.now();
-      // The client is gone when either the request aborts or the response
-      // stream is cancelled; dev proxies don't always surface the former.
-      const upstream = new AbortController();
-      const disconnect = () => upstream.abort();
-      c.req.raw.signal.addEventListener("abort", disconnect, { once: true });
-      stream.onAbort(disconnect);
-      const { signal } = upstream;
-      const database = db(c.env);
-      let seq = 0;
-      const send = (event: Payload) =>
-        stream.write(
-          encodeEvent({
-            ...event,
-            messageId: assistantMessageId,
-            seq: seq++,
-          } as StreamEvent),
-        );
+    // Register the whole turn with waitUntil: once the client disconnects the
+    // runtime may cancel unregistered work, and the "stopped" save must run.
+    return streamSSE(c, (stream) => {
+      const turn = (async () => {
+        const startedAt = Date.now();
+        // The client is gone when either the request aborts or the response
+        // stream is cancelled; dev proxies don't always surface the former.
+        const upstream = new AbortController();
+        const disconnect = () => upstream.abort();
+        c.req.raw.signal.addEventListener("abort", disconnect, { once: true });
+        stream.onAbort(disconnect);
+        const { signal } = upstream;
+        const database = db(c.env);
+        let seq = 0;
+        const send = (event: Payload) =>
+          stream.write(
+            encodeEvent({
+              ...event,
+              messageId: assistantMessageId,
+              seq: seq++,
+            } as StreamEvent),
+          );
 
-      await send({ type: "start" });
+        await send({ type: "start" });
 
-      let history: ChatMessage[];
-      try {
-        await insertUserMessage(database, {
-          conversationId,
-          id: userMessageId,
-          text,
-          lang: /[؀-ۿ]/.test(text) ? "ar" : "en",
-        });
-        const [existing, recent] = await Promise.all([
-          getMessage(database, assistantMessageId),
-          recentMessages(database, conversationId),
-        ]);
-        if (existing) {
-          await send({ type: "done", message: existing });
+        let history: ChatMessage[];
+        try {
+          await insertUserMessage(database, {
+            conversationId,
+            id: userMessageId,
+            text,
+            lang: /[؀-ۿ]/.test(text) ? "ar" : "en",
+          });
+          const [existing, recent] = await Promise.all([
+            getMessage(database, assistantMessageId),
+            recentMessages(database, conversationId),
+          ]);
+          if (existing) {
+            await send({ type: "done", message: existing });
+            return;
+          }
+          history = recent
+            .filter(
+              (m) =>
+                m.content && m.status !== "error" && m.status !== "streaming",
+            )
+            .map(({ role, content }) => ({ role, content }));
+        } catch (error) {
+          console.error("chat.stream context failed", error);
+          await send({
+            type: "error",
+            message: "Something went wrong on our side. Try again.",
+            retryable: true,
+          });
           return;
         }
-        history = recent
-          .filter(
-            (m) =>
-              m.content && m.status !== "error" && m.status !== "streaming",
-          )
-          .map(({ role, content }) => ({ role, content }));
-      } catch (error) {
-        console.error("chat.stream context failed", error);
-        await send({
-          type: "error",
-          message: "Something went wrong on our side. Try again.",
-          retryable: true,
-        });
-        return;
-      }
 
-      let content = "";
-      let provider: Provider | undefined;
-      let ttftMs: number | undefined;
-      let failed = false;
+        let content = "";
+        let provider: Provider | undefined;
+        let ttftMs: number | undefined;
+        let failed = false;
 
-      try {
-        for await (const chunk of streamChat(
-          providersFromEnv(c.env),
-          [{ role: "system", content: systemPrompt(locale) }, ...history],
-          { signal },
-        )) {
-          provider = chunk.provider;
-          ttftMs ??= Date.now() - startedAt;
-          content += chunk.text;
-          await send({ type: "delta", text: chunk.text });
+        try {
+          for await (const chunk of streamChat(
+            providersFromEnv(c.env),
+            [{ role: "system", content: systemPrompt(locale) }, ...history],
+            { signal },
+          )) {
+            provider = chunk.provider;
+            ttftMs ??= Date.now() - startedAt;
+            content += chunk.text;
+            await send({ type: "delta", text: chunk.text });
+          }
+        } catch (error) {
+          failed = true;
+          if (!signal.aborted) console.error("chat.stream failed", error);
         }
-      } catch (error) {
-        failed = true;
-        if (!signal.aborted) console.error("chat.stream failed", error);
-      }
-      const status = signal.aborted ? "stopped" : failed ? "error" : "complete";
-      const error =
-        status === "error"
-          ? {
-              message:
-                ttftMs === undefined
-                  ? "No model is available right now. Try again in a moment."
-                  : "The reply was cut off.",
-              retryable: true,
-            }
-          : undefined;
+        const status = signal.aborted
+          ? "stopped"
+          : failed
+            ? "error"
+            : "complete";
+        const error =
+          status === "error"
+            ? {
+                message:
+                  ttftMs === undefined
+                    ? "No model is available right now. Try again in a moment."
+                    : "The reply was cut off.",
+                retryable: true,
+              }
+            : undefined;
 
-      const saved = saveAssistantMessage(database, {
-        id: assistantMessageId,
-        conversationId,
-        content,
-        status,
-        provider: provider?.name ?? null,
-        model: provider?.model ?? null,
-        error,
-      });
-
-      if (status === "stopped") {
-        c.executionCtx.waitUntil(saved);
-      } else {
-        const message = await saved;
-        await send(
-          error ? { type: "error", ...error } : { type: "done", message },
-        );
-      }
-
-      console.log(
-        JSON.stringify({
-          route: "chat.stream",
+        const saved = saveAssistantMessage(database, {
+          id: assistantMessageId,
           conversationId,
-          provider: provider?.name,
-          model: provider?.model,
-          ttftMs,
-          totalMs: Date.now() - startedAt,
-          chars: content.length,
+          content,
           status,
-        }),
-      );
+          provider: provider?.name ?? null,
+          model: provider?.model ?? null,
+          error,
+        });
+
+        const message = await saved;
+        if (status !== "stopped") {
+          await send(
+            error ? { type: "error", ...error } : { type: "done", message },
+          );
+        }
+
+        console.log(
+          JSON.stringify({
+            route: "chat.stream",
+            conversationId,
+            provider: provider?.name,
+            model: provider?.model,
+            ttftMs,
+            totalMs: Date.now() - startedAt,
+            chars: content.length,
+            status,
+          }),
+        );
+      })();
+      c.executionCtx.waitUntil(turn);
+      return turn;
     });
   },
 );

@@ -4,6 +4,9 @@
   "main": "./worker/index.ts",
   "compatibility_date": "2026-11-17",
   "compatibility_flags": ["nodejs_compat"],
+  // Run Worker code near Neon (Frankfurt) and in a region Gemini serves;
+  // static assets still come from the edge nearest the visitor.
+  "placement": { "region": "aws:eu-central-1" },
   "observability": {
     "enabled": true
   },
