@@ -57,6 +57,12 @@
   --accent-text: #8a5a00;
 }
 
+/* Trim a text box to its visible glyphs (cap height to baseline) so labels
+   centre optically in bars and avatars; unsupported browsers ignore it. */
+@utility text-trim {
+  text-box: trim-both cap alphabetic;
+}
+
 @theme inline {
   --color-bg: var(--bg);
   --color-rail: var(--rail);

@@ -92,14 +92,14 @@ export function Sidebar({ onNavigate, onCollapse, onOpenSettings }: Props) {
 
   return (
     <div className="flex h-full flex-col pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]">
-      <div className="flex items-center gap-2.5 px-4.5 pt-4.5 pb-3">
+      <div className="flex h-14 shrink-0 items-center gap-2.5 px-4.5">
         <Mark className="size-7 shrink-0" />
         {locale === "ar" ? (
-          <span className="font-bold font-kufi text-[1.15rem] leading-none">
+          <span className="text-trim font-bold font-kufi text-[1.15rem] leading-none">
             حوار
           </span>
         ) : (
-          <span className="font-bold font-display text-[1.2rem] leading-none tracking-[-0.03em]">
+          <span className="text-trim font-bold font-display text-[1.2rem] leading-none tracking-[-0.03em]">
             hiwar
           </span>
         )}
@@ -216,11 +216,11 @@ export function Sidebar({ onNavigate, onCollapse, onOpenSettings }: Props) {
         <button type="button" onClick={onOpenSettings} className={row}>
           <span
             aria-hidden
-            className="grid size-6 shrink-0 place-items-center rounded-full bg-accent-soft font-medium text-accent-text text-xs"
+            className="text-trim grid size-6 shrink-0 place-items-center rounded-full bg-accent-soft font-medium text-accent-text text-xs"
           >
             {Array.from(label)[0]?.toUpperCase()}
           </span>
-          <span className="truncate">{label}</span>
+          <span className="text-trim truncate py-px">{label}</span>
         </button>
       </div>
       <ConfirmDialog

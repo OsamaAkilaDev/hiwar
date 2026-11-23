@@ -28,7 +28,7 @@ export function Header({ sidebarOpen, onToggleSidebar }: Props) {
       </button>
       <p
         dir="auto"
-        className="min-w-0 flex-1 truncate px-1.5 font-medium text-sm"
+        className="text-trim min-w-0 flex-1 truncate px-1.5 py-px font-medium text-sm"
       >
         {title ?? t("newChat")}
       </p>
