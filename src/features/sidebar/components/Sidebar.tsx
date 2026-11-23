@@ -1,13 +1,19 @@
-import { Link, useParams } from "@tanstack/react-router";
+import { Link, useNavigate, useParams } from "@tanstack/react-router";
 import { SquarePen } from "lucide-react";
+import { useState } from "react";
+import type { ConversationDTO } from "../../../../shared/events";
 import { useT } from "../../../i18n";
 import { groupConversations } from "../groups";
 import { useConversations } from "../hooks/useConversations";
+import { useDeleteConversation } from "../hooks/useDeleteConversation";
+import { useRenameConversation } from "../hooks/useRenameConversation";
 import { ConversationItem } from "./ConversationItem";
+import { DeleteDialog } from "./DeleteDialog";
 import { SidebarSkeleton } from "./SidebarSkeleton";
 
 export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
   const t = useT();
+  const navigate = useNavigate();
   const { conversationId } = useParams({ strict: false });
   const {
     conversations,
@@ -16,6 +22,15 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
     isFetchingNextPage,
     isPending,
   } = useConversations();
+  const rename = useRenameConversation();
+  const remove = useDeleteConversation();
+  const [target, setTarget] = useState<ConversationDTO>();
+  const [confirming, setConfirming] = useState(false);
+  const error = rename.isError
+    ? t("error.rename")
+    : remove.isError
+      ? t("error.delete")
+      : null;
 
   return (
     <div className="flex h-full flex-col pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]">
@@ -33,6 +48,11 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
         aria-label={t("chats")}
         className="flex-1 overflow-y-auto overscroll-contain px-2 pb-2"
       >
+        {error && (
+          <p role="alert" className="px-3 text-danger text-sm">
+            {error}
+          </p>
+        )}
         {isPending ? (
           <SidebarSkeleton />
         ) : conversations.length === 0 ? (
@@ -50,6 +70,13 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
                     conversation={conversation}
                     active={conversation.id === conversationId}
                     onNavigate={onNavigate}
+                    onRename={(title) =>
+                      rename.mutate({ id: conversation.id, title })
+                    }
+                    onDelete={() => {
+                      setTarget(conversation);
+                      setConfirming(true);
+                    }}
                   />
                 ))}
               </ul>
@@ -67,6 +94,16 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
           </button>
         )}
       </nav>
+      <DeleteDialog
+        title={target?.title ?? null}
+        open={confirming}
+        onClose={() => setConfirming(false)}
+        onConfirm={() => {
+          if (!target) return;
+          remove.mutate(target.id);
+          if (target.id === conversationId) navigate({ to: "/" });
+        }}
+      />
     </div>
   );
 }
