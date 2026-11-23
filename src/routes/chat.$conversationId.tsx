@@ -14,7 +14,7 @@ export const Route = createFileRoute("/chat/$conversationId")({
   loader: ({ context: { queryClient }, params: { conversationId } }) =>
     queryClient.ensureQueryData({
       queryKey: queryKeys.messages(conversationId),
-      queryFn: ({ signal }) => getMessages(conversationId, { signal }),
+      queryFn: () => getMessages(conversationId),
     }),
   pendingComponent: ChatSkeleton,
   errorComponent: ChatError,
