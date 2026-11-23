@@ -1,5 +1,3 @@
-# Copy to .dev.vars (git-ignored). Local dev only; production uses `wrangler secret put`.
+# Copy to .dev.vars (git-ignored). Worker vars for local dev; production uses `wrangler secret put`.
 LLM_PROVIDERS=mock
 GEMINI_API_KEY=
-DATABASE_URL=
-CLOUDFLARE_HYPERDRIVE_LOCAL_CONNECTION_STRING_HYPERDRIVE=
