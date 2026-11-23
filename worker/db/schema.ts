@@ -1,12 +1,16 @@
 import {
+  type AnyPgColumn,
   index,
   integer,
   jsonb,
   pgEnum,
   pgTable,
+  real,
   text,
   timestamp,
+  unique,
   uuid,
+  vector,
 } from "drizzle-orm/pg-core";
 
 export const SEED_USER_ID = "00000000-0000-4000-8000-000000000001";
@@ -62,4 +66,43 @@ export const messages = pgTable(
     createdAt: createdAt(),
   },
   (t) => [index().on(t.conversationId, t.id)],
+);
+
+export const profileFacts = pgTable(
+  "profile_facts",
+  {
+    id: uuid().primaryKey().defaultRandom(),
+    userId: uuid()
+      .notNull()
+      .references(() => users.id),
+    key: text().notNull(),
+    value: text().notNull(),
+    sourceMessageId: uuid(),
+    updatedAt: timestamp({ withTimezone: true, precision: 3 })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [unique("profile_facts_user_id_key_unique").on(t.userId, t.key)],
+);
+
+export const memories = pgTable(
+  "memories",
+  {
+    id: uuid().primaryKey().defaultRandom(),
+    userId: uuid()
+      .notNull()
+      .references(() => users.id),
+    content: text().notNull(),
+    embedding: vector({ dimensions: 1024 }).notNull(),
+    embeddingModel: text().notNull(),
+    lang: text().notNull(),
+    sourceConversationId: uuid(),
+    importance: real().notNull(),
+    createdAt: createdAt(),
+    lastUsedAt: timestamp({ withTimezone: true, precision: 3 }),
+    supersededBy: uuid().references((): AnyPgColumn => memories.id, {
+      onDelete: "set null",
+    }),
+  },
+  (t) => [index().on(t.userId, t.createdAt.desc())],
 );
