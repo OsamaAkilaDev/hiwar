@@ -70,7 +70,7 @@ function Segmented<T extends string>({
           lang={o.lang}
           aria-pressed={value === o.id}
           onClick={() => onChange(o.id)}
-          className="h-7 rounded-[0.6rem] px-3 text-muted text-xs transition-colors hover:text-fg aria-pressed:bg-surface-2 aria-pressed:text-fg"
+          className="h-7 rounded-[0.6rem] px-3 text-muted text-xs hover:text-fg aria-pressed:bg-surface-2 aria-pressed:text-fg"
         >
           {o.label}
         </button>
@@ -135,7 +135,7 @@ export function SettingsDialog({
                 aria-label={t("close")}
                 title={t("close")}
                 onClick={onClose}
-                className="-mt-2 grid size-8 place-items-center rounded-lg text-muted transition-colors hover:bg-surface-2 hover:text-fg sm:hidden"
+                className="-mt-2 grid size-8 place-items-center rounded-lg text-muted hover:bg-surface-2 hover:text-fg sm:hidden"
               >
                 <XIcon className="size-4.5" aria-hidden />
               </button>
@@ -147,7 +147,7 @@ export function SettingsDialog({
                   type="button"
                   aria-current={tab === id}
                   onClick={() => setTab(id)}
-                  className="flex items-center gap-2.5 rounded-[0.65rem] px-2.5 py-2 text-start text-muted text-sm transition-colors hover:text-fg aria-[current=true]:bg-surface-2 aria-[current=true]:text-fg"
+                  className="flex items-center gap-2.5 rounded-[0.65rem] px-2.5 py-2 text-start text-muted text-sm hover:text-fg aria-[current=true]:bg-surface-2 aria-[current=true]:text-fg"
                 >
                   <Icon className="size-4.5" aria-hidden />
                   {t(`settings.${id}`)}
@@ -227,7 +227,7 @@ export function SettingsDialog({
                 <button
                   type="button"
                   onClick={() => setConfirming(true)}
-                  className="h-8 rounded-lg border border-danger px-3 text-danger text-sm transition-colors hover:bg-danger/10"
+                  className="h-8 rounded-lg border border-danger px-3 text-danger text-sm hover:bg-danger/10"
                 >
                   {t("data.deleteAll")}
                 </button>

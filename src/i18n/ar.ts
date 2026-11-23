@@ -62,7 +62,6 @@ export const ar: Record<MessageKey, string> = {
   "greeting.mind.named": "بماذا تفكّر يا {name}؟",
   "greeting.welcome": "أهلاً من جديد",
   "greeting.welcome.named": "أهلاً من جديد يا {name}",
-  recents: "الأخيرة",
   you: "أنت",
   "settings.appearance": "المظهر",
   "settings.data": "البيانات",

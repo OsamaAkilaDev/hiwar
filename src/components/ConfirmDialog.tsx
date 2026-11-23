@@ -46,7 +46,7 @@ export function ConfirmDialog({
         <button
           type="button"
           onClick={onClose}
-          className="h-9 rounded-lg px-3 text-sm transition-colors hover:bg-surface-2"
+          className="h-9 rounded-lg px-3 text-sm hover:bg-surface-2"
         >
           {t("cancel")}
         </button>
@@ -56,7 +56,7 @@ export function ConfirmDialog({
             onConfirm();
             onClose();
           }}
-          className="h-9 rounded-lg bg-danger px-3 font-medium text-bg text-sm transition-opacity hover:opacity-90"
+          className="h-9 rounded-lg bg-danger px-3 font-medium text-bg text-sm hover:opacity-90"
         >
           {confirmLabel}
         </button>

@@ -56,7 +56,10 @@ export const MessageRow = memo(function MessageRow({
     <div
       className={`group grid grid-cols-[1.75rem_minmax(0,1fr)] gap-3.5 ${fresh ? "animate-rise" : ""}`}
     >
-      <Mark className="mt-0.5 size-7" />
+      <Mark
+        className="mt-0.5 size-7"
+        animate={live && !text ? "think" : undefined}
+      />
       <div className={live && text ? "streaming" : undefined}>
         <div {...(text ? dirProps(text) : {})}>
           {text ? <Markdown text={text} /> : null}
@@ -89,7 +92,7 @@ export const MessageRow = memo(function MessageRow({
                 aria-label={t("regenerate")}
                 title={t("regenerate")}
                 onClick={onRetry}
-                className="grid size-7 place-items-center rounded-lg transition-colors hover:bg-surface-2 hover:text-fg"
+                className="grid size-7 place-items-center rounded-lg hover:bg-surface-2 hover:text-fg"
               >
                 <ArrowClockwiseIcon className="size-4" aria-hidden />
               </button>
@@ -138,7 +141,7 @@ export function RetryButton({ onRetry }: { onRetry?: () => void }) {
     <button
       type="button"
       onClick={onRetry}
-      className="inline-flex items-center gap-1.5 -my-1 whitespace-nowrap rounded-md px-2 py-2 text-accent-text transition-colors hover:bg-surface-2"
+      className="inline-flex items-center gap-1.5 -my-1 whitespace-nowrap rounded-md px-2 py-2 text-accent-text hover:bg-surface-2"
     >
       <ArrowClockwiseIcon className="size-3.5" aria-hidden />
       {t("retry")}

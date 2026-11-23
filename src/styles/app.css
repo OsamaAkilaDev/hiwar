@@ -101,6 +101,21 @@
     background: color-mix(in oklab, var(--accent) 35%, transparent);
   }
 
+  button:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]),
+  summary,
+  label[for],
+  select,
+  input[type="checkbox"],
+  input[type="radio"] {
+    cursor: pointer;
+  }
+
+  :disabled,
+  [aria-disabled="true"] {
+    cursor: not-allowed;
+  }
+
   :focus-visible {
     outline: 2px solid var(--accent);
     outline-offset: 2px;
@@ -289,7 +304,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  *,
+  *:not(.enter, .thread-in, .row-in, .mark-draw *),
   *::before,
   *::after {
     animation-duration: 0.01ms !important;
@@ -359,4 +374,92 @@
 
 .drawer[open]::backdrop {
   transition-duration: 350ms;
+}
+
+/* Press feedback: enabled buttons dip on :active. */
+@layer base {
+  button {
+    transition: scale 150ms ease-out;
+  }
+  button:not(:disabled):active {
+    scale: 0.96;
+  }
+}
+
+/* Entrances. Reduced motion keeps only a quick fade; movement and blur are opt-in. */
+@keyframes reveal {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes enter {
+  from {
+    opacity: 0;
+    filter: blur(4px);
+    translate: 0 12px;
+  }
+}
+
+@keyframes slide-in {
+  from {
+    opacity: 0;
+    translate: 0 var(--dy);
+  }
+}
+
+@keyframes pop {
+  from {
+    opacity: 0;
+    scale: 0.4;
+  }
+}
+
+@keyframes pulse-dot {
+  50% {
+    opacity: 0.25;
+  }
+}
+
+.enter,
+.thread-in,
+.row-in,
+.mark-draw :is(.dot, .ghost) {
+  animation: reveal 150ms ease-out both;
+}
+
+.thread-in {
+  --dy: 8px;
+}
+
+.row-in {
+  --dy: -8px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .enter {
+    animation: enter 300ms cubic-bezier(0.2, 0, 0, 1) both;
+    animation-delay: calc(var(--i, 0) * 100ms);
+  }
+
+  .thread-in,
+  .row-in {
+    animation: slide-in 250ms cubic-bezier(0.2, 0, 0, 1) both;
+  }
+
+  .mark-draw .ghost {
+    animation-duration: 300ms;
+  }
+
+  .mark-draw .dot {
+    animation: pop 220ms cubic-bezier(0.2, 0, 0, 1) both;
+    animation-delay: calc(var(--i) * 45ms);
+    transform-box: fill-box;
+    transform-origin: center;
+  }
+
+  .mark-think .dot {
+    animation: pulse-dot 1.2s ease-in-out infinite;
+    animation-delay: calc(var(--i) * 70ms);
+  }
 }

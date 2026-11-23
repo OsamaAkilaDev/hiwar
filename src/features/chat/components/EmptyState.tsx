@@ -19,9 +19,9 @@ export function EmptyState() {
   const [variant] = useState(pick);
 
   return (
-    <div className="flex items-center gap-3.5">
-      <Mark className="size-9 shrink-0" />
-      <h1 className="font-display font-medium text-3xl tracking-[-0.02em] sm:text-4xl [&:lang(ar)]:font-kufi [&:lang(ar)]:tracking-normal">
+    <div className="enter flex items-center justify-center gap-3.5 [--i:0]">
+      <Mark className="size-9 shrink-0" animate="draw" />
+      <h1 className="text-center font-display font-medium text-3xl tracking-[-0.02em] sm:text-4xl [&:lang(ar)]:font-kufi [&:lang(ar)]:tracking-normal">
         {name
           ? t(`greeting.${variant}.named`, { name })
           : t(`greeting.${variant}`)}

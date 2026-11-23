@@ -4,7 +4,7 @@ import {
   SidebarSimpleIcon,
 } from "@phosphor-icons/react";
 import { Link, useNavigate, useParams } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { ConversationDTO } from "../../../../shared/events";
 import { ConfirmDialog } from "../../../components/ConfirmDialog";
 import { Mark } from "../../../components/Mark";
@@ -24,10 +24,10 @@ type Props = {
 };
 
 const iconButton =
-  "grid size-8.5 shrink-0 place-items-center rounded-[0.65rem] text-muted transition-colors hover:bg-surface-2 hover:text-fg";
+  "grid size-8.5 shrink-0 place-items-center rounded-[0.65rem] text-muted hover:bg-surface-2 hover:text-fg";
 
 const row =
-  "flex h-9 w-full items-center gap-2.5 rounded-lg px-3 text-start text-sm transition-colors hover:bg-surface-2";
+  "flex h-[34px] w-full items-center gap-2.5 rounded-lg px-3 text-start text-[0.9rem] hover:bg-surface-2";
 
 export function Sidebar({ onNavigate, onCollapse, onOpenSettings }: Props) {
   const t = useT();
@@ -42,6 +42,7 @@ export function Sidebar({ onNavigate, onCollapse, onOpenSettings }: Props) {
   } = useConversations();
   const rename = useRenameConversation();
   const remove = useDeleteConversation();
+  const topId = useRef<string>(undefined);
   const [target, setTarget] = useState<ConversationDTO>();
   const [confirming, setConfirming] = useState(false);
   const [query, setQuery] = useState("");
@@ -59,6 +60,23 @@ export function Sidebar({ onNavigate, onCollapse, onOpenSettings }: Props) {
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, []);
+
+  // Rows that show up above the previous top row after the list first loaded.
+  const seen = useRef<Set<string>>(null);
+  const fresh = useRef(new Set<string>());
+  if (!isPending) {
+    const ids = conversations.map((c) => c.id);
+    if (!seen.current) seen.current = new Set(ids);
+    else {
+      const top = ids.indexOf(topId.current ?? "");
+      for (const [i, id] of ids.entries())
+        if (!seen.current.has(id)) {
+          seen.current.add(id);
+          if (top < 0 || i < top) fresh.current.add(id);
+        }
+    }
+    topId.current = ids[0];
+  }
 
   const needle = query.trim().toLowerCase();
   const shown = needle
@@ -100,7 +118,7 @@ export function Sidebar({ onNavigate, onCollapse, onOpenSettings }: Props) {
           </button>
         )}
       </div>
-      <div className="flex flex-col gap-0.5 px-2">
+      <div className="flex flex-col gap-0.5 px-2 pb-3">
         <Link to="/" onClick={onNavigate} className={row}>
           <NotePencilIcon className="size-4.5 shrink-0" aria-hidden />
           {t("newChat")}
@@ -155,35 +173,33 @@ export function Sidebar({ onNavigate, onCollapse, onOpenSettings }: Props) {
             {needle ? t("noMatches") : t("noChats")}
           </p>
         ) : (
-          <>
-            <p className="px-3 pt-5 font-medium text-subtle text-xs">
-              {t("recents")}
-            </p>
-            {groupConversations(shown).map(({ key, items }) => (
-              <section key={key}>
-                <h2 className="px-3 pt-3 pb-1.5 font-medium text-subtle text-xs">
-                  {t(key)}
-                </h2>
-                <ul className="flex flex-col gap-0.5">
-                  {items.map((conversation) => (
-                    <ConversationItem
-                      key={conversation.id}
-                      conversation={conversation}
-                      active={conversation.id === conversationId}
-                      onNavigate={onNavigate}
-                      onRename={(title) =>
-                        rename.mutate({ id: conversation.id, title })
-                      }
-                      onDelete={() => {
-                        setTarget(conversation);
-                        setConfirming(true);
-                      }}
-                    />
-                  ))}
-                </ul>
-              </section>
-            ))}
-          </>
+          groupConversations(shown).map(({ key, items }, i) => (
+            <section key={key}>
+              <h2
+                className={`px-3 pb-1 font-medium text-subtle text-xs ${i === 0 ? "pt-2" : "pt-4"}`}
+              >
+                {t(key)}
+              </h2>
+              <ul className="flex flex-col gap-0.5">
+                {items.map((conversation) => (
+                  <ConversationItem
+                    key={conversation.id}
+                    conversation={conversation}
+                    active={conversation.id === conversationId}
+                    fresh={fresh.current.has(conversation.id)}
+                    onNavigate={onNavigate}
+                    onRename={(title) =>
+                      rename.mutate({ id: conversation.id, title })
+                    }
+                    onDelete={() => {
+                      setTarget(conversation);
+                      setConfirming(true);
+                    }}
+                  />
+                ))}
+              </ul>
+            </section>
+          ))
         )}
         {hasNextPage && !needle && (
           <button

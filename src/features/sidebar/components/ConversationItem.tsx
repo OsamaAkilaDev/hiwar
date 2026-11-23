@@ -7,6 +7,8 @@ import { useT } from "../../../i18n";
 type Props = {
   conversation: ConversationDTO;
   active: boolean;
+  /** Added to the top of the list after it loaded; eases in. */
+  fresh?: boolean;
   onNavigate?: () => void;
   onRename: (title: string) => void;
   onDelete: () => void;
@@ -18,6 +20,7 @@ const action =
 export function ConversationItem({
   conversation: { id, title },
   active,
+  fresh,
   onNavigate,
   onRename,
   onDelete,
@@ -47,7 +50,7 @@ export function ConversationItem({
   };
 
   return (
-    <li className="group relative">
+    <li className={`group relative ${fresh ? "row-in" : ""}`}>
       {editing ? (
         <input
           ref={input}
@@ -60,7 +63,7 @@ export function ConversationItem({
             if (e.key === "Escape") cancelled.current = true;
             if (e.key === "Enter" || e.key === "Escape") e.currentTarget.blur();
           }}
-          className="w-full rounded-[0.65rem] border border-line bg-bg px-3 py-2 text-fg text-sm"
+          className="w-full rounded-[0.65rem] border border-line bg-bg h-[34px] px-3 py-1.5 text-[0.9rem] text-fg"
         />
       ) : (
         <>
@@ -72,7 +75,7 @@ export function ConversationItem({
             title={label}
             aria-current={active ? "page" : undefined}
             onClick={onNavigate}
-            className={`relative block truncate rounded-[0.65rem] py-2 ps-3.5 pe-18 text-sm hover:bg-surface-2 hover:text-fg ${active ? "bg-surface text-fg shadow-[inset_0_0_0_1px_var(--line)] before:absolute before:inset-y-2.5 before:start-1 before:w-[3px] before:rounded-full before:bg-accent" : "text-muted"}`}
+            className={`relative block h-[34px] truncate rounded-[0.65rem] py-1.5 ps-3.5 pe-18 text-[0.9rem] leading-[22px] hover:bg-surface-2 hover:text-fg ${active ? "bg-surface text-fg shadow-[inset_0_0_0_1px_var(--line)] before:absolute before:inset-y-2.5 before:start-1 before:w-[3px] before:rounded-full before:bg-accent" : "text-muted"}`}
           >
             {label}
           </Link>

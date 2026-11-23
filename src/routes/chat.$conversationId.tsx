@@ -62,6 +62,7 @@ function Conversation({ conversationId }: { conversationId: string }) {
   )?.model;
   const composer = (
     <Composer
+      intro={messages.length === 0}
       model={model ?? undefined}
       isStreaming={isStreaming}
       onSend={send}
@@ -75,15 +76,17 @@ function Conversation({ conversationId }: { conversationId: string }) {
         {announcement}
       </div>
       {messages.length === 0 ? (
-        <div
-          className={`${column} flex flex-1 flex-col gap-6 pt-[22vh] lg:pt-[30vh]`}
-        >
-          <EmptyState />
-          {composer}
+        <div className={`${column} flex flex-1 flex-col justify-center`}>
+          <div className="flex flex-col gap-6">
+            <EmptyState />
+            {composer}
+          </div>
+          {/* Lifts the centered group to about 38% of the viewport. */}
+          <div aria-hidden className="h-[24vh]" />
         </div>
       ) : (
         <>
-          <div className={`${column} flex-1 pt-7`}>
+          <div className={`${column} thread-in flex-1 pt-7`}>
             <MessageList
               messages={messages}
               streamingId={streamingId}

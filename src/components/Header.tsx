@@ -4,7 +4,7 @@ import { useConversations } from "../features/sidebar/hooks/useConversations";
 import { useT } from "../i18n";
 
 const iconButton =
-  "grid size-8.5 shrink-0 place-items-center rounded-[0.65rem] text-muted transition-colors hover:bg-surface-2 hover:text-fg";
+  "grid size-8.5 shrink-0 place-items-center rounded-[0.65rem] text-muted hover:bg-surface-2 hover:text-fg";
 
 type Props = { sidebarOpen: boolean; onToggleSidebar: () => void };
 

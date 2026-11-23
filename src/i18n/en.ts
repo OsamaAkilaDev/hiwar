@@ -60,7 +60,6 @@ export const en = {
   "greeting.mind.named": "What's on your mind, {name}?",
   "greeting.welcome": "Welcome back",
   "greeting.welcome.named": "Welcome back, {name}",
-  recents: "Recents",
   you: "You",
   "settings.appearance": "Appearance",
   "settings.data": "Data",

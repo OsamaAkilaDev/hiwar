@@ -10,13 +10,15 @@ import {
 import { useT } from "../../../i18n";
 
 type Props = {
+  /** Stagger the composer in on mount (empty state). */
+  intro?: boolean;
   model?: string;
   isStreaming: boolean;
   onSend: (text: string) => void;
   onStop: () => void;
 };
 
-export function Composer({ model, isStreaming, onSend, onStop }: Props) {
+export function Composer({ intro, model, isStreaming, onSend, onStop }: Props) {
   const t = useT();
   const [text, setText] = useState("");
   const input = useRef<HTMLTextAreaElement>(null);
@@ -74,7 +76,7 @@ export function Composer({ model, isStreaming, onSend, onStop }: Props) {
     <>
       <form
         onSubmit={submit}
-        className="rounded-[1.25rem] border border-line bg-glass shadow-lift backdrop-blur-[20px] backdrop-saturate-150 transition-[border-color,box-shadow] focus-within:border-[color-mix(in_oklab,var(--accent)_55%,var(--line))] focus-within:shadow-[0_0_0_4px_var(--accent-soft),var(--lift)]"
+        className={`rounded-[1.25rem] border border-line bg-glass shadow-lift backdrop-blur-[20px] backdrop-saturate-150 transition-[border-color,box-shadow] focus-within:border-[color-mix(in_oklab,var(--accent)_55%,var(--line))] focus-within:shadow-[0_0_0_4px_var(--accent-soft),var(--lift)] ${intro ? "enter [--i:1]" : ""}`}
       >
         <label htmlFor="composer" className="sr-only">
           {t("composerLabel")}
@@ -115,7 +117,9 @@ export function Composer({ model, isStreaming, onSend, onStop }: Props) {
           )}
         </div>
       </form>
-      <div className="mt-2 flex items-center gap-4 text-subtle text-xs">
+      <div
+        className={`mt-2 flex items-center gap-4 text-subtle text-xs ${model ? "" : "justify-center"} ${intro ? "enter [--i:2]" : ""}`}
+      >
         <p className="hidden gap-4 pointer-fine:flex">
           <span>
             <Kbd>Enter</Kbd> {t("hint.send")}
@@ -142,7 +146,7 @@ export function Composer({ model, isStreaming, onSend, onStop }: Props) {
 }
 
 const sendButton =
-  "grid size-9 place-items-center rounded-xl bg-accent text-accent-ink transition-[transform,filter] hover:brightness-105 active:scale-95";
+  "grid size-9 place-items-center rounded-xl bg-accent text-accent-ink hover:brightness-105";
 
 const Kbd = ({ children }: { children: string }) => (
   <kbd className="rounded-[0.3rem] border border-line px-1.5 font-mono text-[0.7rem]">

@@ -29,7 +29,7 @@ export function CopyButton({ text, label = "copy", className }: Props) {
       aria-label={name}
       title={name}
       onClick={copy}
-      className={`grid place-items-center text-subtle transition-colors hover:bg-surface-2 hover:text-fg ${className ?? ""}`}
+      className={`grid place-items-center text-subtle hover:bg-surface-2 hover:text-fg ${className ?? ""}`}
     >
       {copied ? (
         <CheckIcon className="size-4" aria-hidden />
