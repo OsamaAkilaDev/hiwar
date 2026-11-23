@@ -54,7 +54,7 @@ export async function* streamChat(
       [Symbol.asyncIterator]();
 
     let first: IteratorResult<string>;
-    let timer: ReturnType<typeof setTimeout> | undefined;
+    let timer: ReturnType<typeof setTimeout> | null = null;
     try {
       const timeout = new Promise<never>((_, reject) => {
         timer = setTimeout(
