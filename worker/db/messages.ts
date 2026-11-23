@@ -5,14 +5,25 @@ import { conversations, messages, SEED_USER_ID } from "./schema";
 
 type Row = typeof messages.$inferSelect;
 
-const toDTO = (row: Row): MessageDTO => ({
-  id: row.id,
-  conversationId: row.conversationId,
-  role: row.role,
-  content: row.content,
-  status: row.status,
-  createdAt: row.createdAt.toISOString(),
-});
+type ErrorPart = { type: "error"; message: string; retryable: boolean };
+
+const errorPart = (parts: unknown) =>
+  (parts as { type?: string }[]).find(
+    (p): p is ErrorPart => p.type === "error",
+  );
+
+const toDTO = (row: Row): MessageDTO => {
+  const failure = errorPart(row.parts);
+  return {
+    id: row.id,
+    conversationId: row.conversationId,
+    role: row.role,
+    content: row.content,
+    status: row.status,
+    createdAt: row.createdAt.toISOString(),
+    ...(failure && { error: failure.message, retryable: failure.retryable }),
+  };
+};
 
 // One statement (one round trip): upsert the conversation, insert the message.
 export async function insertUserMessage(
@@ -75,15 +86,19 @@ export async function listMessages(
 
 export async function saveAssistantMessage(
   db: DB,
-  input: Pick<
+  {
+    error,
+    ...input
+  }: Pick<
     Row,
     "id" | "conversationId" | "content" | "status" | "provider" | "model"
-  >,
+  > & { error?: Omit<ErrorPart, "type"> },
 ): Promise<MessageDTO> {
+  const parts = error ? [{ type: "error", ...error }] : [];
   return db.transaction(async (tx) => {
     const [row] = await tx
       .insert(messages)
-      .values({ ...input, role: "assistant" })
+      .values({ ...input, parts, role: "assistant" })
       .returning();
     if (!row) throw new Error("Failed to save assistant message");
     await tx

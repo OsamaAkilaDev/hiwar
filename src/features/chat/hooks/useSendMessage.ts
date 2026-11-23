@@ -1,13 +1,13 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
+import type { MessageDTO } from "../../../../shared/events";
 import { streamChat } from "../../../lib/api";
 import { newId } from "../../../lib/ids";
 import { queryKeys } from "../../../lib/query-keys";
 import { useChatStore } from "../store";
 import { createFrameFlusher } from "../stream/frame-flush";
-import type { ChatRow } from "../types";
 
-const assistantRow = (conversationId: string): ChatRow => ({
+const assistantRow = (conversationId: string): MessageDTO => ({
   id: newId(),
   conversationId,
   role: "assistant",
@@ -16,7 +16,7 @@ const assistantRow = (conversationId: string): ChatRow => ({
   createdAt: new Date().toISOString(),
 });
 
-const interrupted = (signal: AbortSignal): Partial<ChatRow> =>
+const interrupted = (signal: AbortSignal): Partial<MessageDTO> =>
   signal.aborted
     ? { status: "stopped" }
     : { status: "error", error: "Connection lost.", retryable: true };
@@ -29,17 +29,17 @@ export function useSendMessage(conversationId: string) {
 
   useEffect(() => () => controller.current?.abort(), []);
 
-  const setRows = (update: (rows: ChatRow[]) => ChatRow[]) =>
-    queryClient.setQueryData<ChatRow[]>(key, (rows) => update(rows ?? []));
+  const setRows = (update: (rows: MessageDTO[]) => MessageDTO[]) =>
+    queryClient.setQueryData<MessageDTO[]>(key, (rows) => update(rows ?? []));
 
-  const run = async (user: ChatRow, assistant: ChatRow) => {
+  const run = async (user: MessageDTO, assistant: MessageDTO) => {
     const { append, clear } = useChatStore.getState();
     const abort = new AbortController();
     controller.current = abort;
     setStreamingId(assistant.id);
     const flusher = createFrameFlusher(append);
 
-    const settle = (patch: Partial<ChatRow>) => {
+    const settle = (patch: Partial<MessageDTO>) => {
       flusher.flushNow();
       const text = useChatStore.getState().streams[assistant.id]?.text ?? "";
       setRows((rows) =>
@@ -86,9 +86,9 @@ export function useSendMessage(conversationId: string) {
   };
 
   const start = async (
-    user: ChatRow,
-    assistant: ChatRow,
-    rows: (rows: ChatRow[]) => ChatRow[],
+    user: MessageDTO,
+    assistant: MessageDTO,
+    rows: (rows: MessageDTO[]) => MessageDTO[],
   ) => {
     await queryClient.cancelQueries({ queryKey: key });
     setRows(rows);
@@ -100,7 +100,7 @@ export function useSendMessage(conversationId: string) {
     isStreaming: streamingId !== null,
     send(text: string) {
       if (controller.current) return;
-      const user: ChatRow = {
+      const user: MessageDTO = {
         id: newId(),
         conversationId,
         role: "user",
@@ -113,7 +113,7 @@ export function useSendMessage(conversationId: string) {
     },
     retry(userMessageId: string) {
       if (controller.current) return;
-      const rows = queryClient.getQueryData<ChatRow[]>(key) ?? [];
+      const rows = queryClient.getQueryData<MessageDTO[]>(key) ?? [];
       const user = rows.find((r) => r.id === userMessageId);
       if (user?.role !== "user") return;
       const assistant = assistantRow(conversationId);

@@ -16,6 +16,8 @@ export const MessageDTO = z.object({
   content: z.string(),
   status: z.enum(["streaming", "complete", "stopped", "error"]),
   createdAt: z.string(),
+  error: z.string().optional(),
+  retryable: z.boolean().optional(),
 });
 export type MessageDTO = z.infer<typeof MessageDTO>;
 

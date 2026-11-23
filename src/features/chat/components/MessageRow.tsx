@@ -1,11 +1,11 @@
 import { RotateCcw } from "lucide-react";
 import { memo, type ReactNode } from "react";
+import type { MessageDTO } from "../../../../shared/events";
 import { dirProps } from "../../../lib/dir";
 import { useChatStore } from "../store";
-import type { ChatRow } from "../types";
 import { Markdown } from "./Markdown";
 
-type Props = { message: ChatRow; live: boolean; onRetry?: () => void };
+type Props = { message: MessageDTO; live: boolean; onRetry?: () => void };
 
 export const MessageRow = memo(function MessageRow({
   message,

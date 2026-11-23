@@ -102,6 +102,16 @@ export const chat = new Hono<{ Bindings: Env }>().post(
         if (!signal.aborted) console.error("chat.stream failed", error);
       }
       const status = signal.aborted ? "stopped" : failed ? "error" : "complete";
+      const error =
+        status === "error"
+          ? {
+              message:
+                ttftMs === undefined
+                  ? "No model is available right now. Try again in a moment."
+                  : "The reply was cut off.",
+              retryable: true,
+            }
+          : undefined;
 
       const saved = saveAssistantMessage(database, {
         id: assistantMessageId,
@@ -110,6 +120,7 @@ export const chat = new Hono<{ Bindings: Env }>().post(
         status,
         provider: provider?.name ?? null,
         model: provider?.model ?? null,
+        error,
       });
 
       if (status === "stopped") {
@@ -117,16 +128,7 @@ export const chat = new Hono<{ Bindings: Env }>().post(
       } else {
         const message = await saved;
         await send(
-          status === "complete"
-            ? { type: "done", message }
-            : {
-                type: "error",
-                message:
-                  ttftMs === undefined
-                    ? "No model is available right now. Try again in a moment."
-                    : "The reply was cut off.",
-                retryable: true,
-              },
+          error ? { type: "error", ...error } : { type: "done", message },
         );
       }
 

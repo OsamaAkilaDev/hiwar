@@ -1,10 +1,10 @@
 import { Fragment, useEffect, useRef } from "react";
+import type { MessageDTO } from "../../../../shared/events";
 import { useChatStore } from "../store";
-import type { ChatRow } from "../types";
 import { MessageRow, NoResponse } from "./MessageRow";
 
 type Props = {
-  messages: ChatRow[];
+  messages: MessageDTO[];
   streamingId: string | null;
   onRetry: (userMessageId: string) => void;
 };
