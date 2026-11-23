@@ -72,7 +72,7 @@ export function ConversationItem({
             title={label}
             aria-current={active ? "page" : undefined}
             onClick={onNavigate}
-            className={`block truncate rounded-lg py-2 ps-3 pe-16 text-sm hover:bg-surface-2 hover:text-fg ${active ? "bg-surface-2 text-fg" : "text-fg-muted"}`}
+            className={`block truncate rounded-lg border border-transparent py-2 ps-3 pe-16 text-sm hover:bg-surface-2 hover:text-fg ${active ? "bg-surface-2 text-fg" : "text-fg-muted"}`}
           >
             {label}
           </Link>
