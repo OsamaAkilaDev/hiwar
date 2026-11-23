@@ -6,8 +6,9 @@ export const ChatStreamRequest = z.object({
   assistantMessageId: z.uuid(),
   text: z.string().min(1).max(8000),
   locale: z.enum(["ar", "en"]),
+  memory: z.boolean().default(true),
 });
-export type ChatStreamRequest = z.infer<typeof ChatStreamRequest>;
+export type ChatStreamRequest = z.input<typeof ChatStreamRequest>;
 
 export const ErrorCode = z.enum([
   "unavailable",

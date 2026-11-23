@@ -15,6 +15,7 @@ import { providersFromEnv, streamChat } from "../llm/gateway";
 import { systemPrompt } from "../llm/prompts/system";
 import { generateTitle } from "../llm/title";
 import type { ChatMessage, Provider } from "../llm/types";
+import { type Context, contextFor, touch } from "../memory/retrieve";
 
 const TITLE_TIMEOUT_MS = 5000;
 
@@ -35,8 +36,14 @@ export const chat = new Hono<{ Bindings: Env }>().post(
       await c.req.json().catch(() => null),
     );
     if (!parsed.success) return c.json({ error: "invalid_request" }, 400);
-    const { conversationId, userMessageId, assistantMessageId, text, locale } =
-      parsed.data;
+    const {
+      conversationId,
+      userMessageId,
+      assistantMessageId,
+      text,
+      locale,
+      memory,
+    } = parsed.data;
 
     const userId = SEED_USER_ID;
     const database = db(c.env);
@@ -79,17 +86,20 @@ export const chat = new Hono<{ Bindings: Env }>().post(
         await send({ type: "start" });
 
         let history: ChatMessage[];
+        let known: Context = { facts: [], memories: [] };
         let wantsTitle = false;
         try {
-          const [existing, recent, conversation] = await Promise.all([
+          const [existing, recent, conversation, context] = await Promise.all([
             getMessage(database, userId, assistantMessageId),
             recentMessages(database, userId, conversationId),
             getConversation(database, userId, conversationId),
+            memory ? contextFor(database, c.env, userId, text) : known,
           ]);
           if (existing) {
             await send({ type: "done", message: existing });
             return;
           }
+          known = context;
           wantsTitle =
             !conversation?.title &&
             recent.filter((m) => m.role === "user").length === 1;
@@ -109,6 +119,13 @@ export const chat = new Hono<{ Bindings: Env }>().post(
           return;
         }
 
+        c.executionCtx.waitUntil(
+          touch(
+            database,
+            known.memories.map((m) => m.id),
+          ),
+        );
+
         const providers = providersFromEnv(c.env);
         const titleAbort = new AbortController();
         const title = wantsTitle
@@ -123,7 +140,16 @@ export const chat = new Hono<{ Bindings: Env }>().post(
         try {
           for await (const chunk of streamChat(
             providers,
-            [{ role: "system", content: systemPrompt(locale) }, ...history],
+            [
+              {
+                role: "system",
+                content: systemPrompt(locale, {
+                  facts: known.facts,
+                  memories: known.memories.map((m) => m.content),
+                }),
+              },
+              ...history,
+            ],
             { signal },
           )) {
             provider = chunk.provider;
