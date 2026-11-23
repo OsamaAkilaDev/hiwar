@@ -20,3 +20,4 @@ worker-configuration.d.ts
 
 # scratch files
 *.tmp.*
+dev-dist/
