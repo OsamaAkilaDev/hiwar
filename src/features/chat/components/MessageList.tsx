@@ -42,13 +42,15 @@ export function MessageList({ messages, streamingId, onRetry }: Props) {
     <div className="flex flex-col gap-7 pb-6">
       {messages.map((m, i) => {
         if (m.role === "assistant") {
-          const userId = messages[i - 1]?.id ?? "";
+          const prev = messages[i - 1];
           return (
             <MessageRow
               key={m.id}
               message={m}
               live={m.id === streamingId}
-              onRetry={() => onRetry(userId)}
+              onRetry={
+                prev?.role === "user" ? () => onRetry(prev.id) : undefined
+              }
             />
           );
         }

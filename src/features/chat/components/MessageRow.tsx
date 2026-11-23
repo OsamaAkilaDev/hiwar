@@ -69,6 +69,7 @@ function Note({ tone, children }: { tone?: "danger"; children: ReactNode }) {
 }
 
 function RetryButton({ onRetry }: { onRetry?: () => void }) {
+  if (!onRetry) return null;
   return (
     <button
       type="button"
