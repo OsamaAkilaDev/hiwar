@@ -99,3 +99,11 @@ export async function saveAssistantMessage(
     return toDTO(row);
   });
 }
+
+export async function getMessage(
+  db: DB,
+  id: string,
+): Promise<MessageDTO | undefined> {
+  const [row] = await db.select().from(messages).where(eq(messages.id, id));
+  return row && toDTO(row);
+}
