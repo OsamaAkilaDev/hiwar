@@ -4,6 +4,7 @@ import type { DB } from "../db/client";
 import { getMemoryCursor, setMemoryCursor } from "../db/conversations";
 import {
   insertMemory,
+  listMemories,
   nearestMemories,
   supersedeMemory,
   upsertFact,
@@ -16,6 +17,7 @@ import { EMBEDDING_MODEL, embed } from "./embed";
 
 const MIN_MESSAGES = 3;
 const TIMEOUT_MS = 20_000;
+const MAX_EXISTING = 40;
 
 const text = (max: number) =>
   z
@@ -34,6 +36,7 @@ const Extraction = z.object({
         .number()
         .default(0.5)
         .transform((n) => Math.min(1, Math.max(0, n))),
+      replaces: z.number().int().positive().optional().catch(undefined),
     }),
   ),
 });
@@ -56,13 +59,32 @@ export const decide = (similarity: number) =>
       ? "supersede"
       : "insert";
 
-async function extract(providers: Provider[], messages: string[]) {
+export const resolveReplaces = (
+  items: { replaces?: number }[],
+  existingIds: string[],
+) => items.map((item) => existingIds[(item.replaces ?? 0) - 1]);
+
+async function extract(
+  providers: Provider[],
+  messages: string[],
+  existing: string[],
+) {
   let raw = "";
   for await (const chunk of streamChat(
     providers,
     [
       { role: "system", content: extractPrompt() },
-      { role: "user", content: messages.join("\n\n") },
+      {
+        role: "user",
+        content: [
+          messages.join("\n\n"),
+          ...(existing.length
+            ? [
+                `Existing memories:\n${existing.map((m, i) => `${i + 1}. ${m}`).join("\n")}`,
+              ]
+            : []),
+        ].join("\n\n"),
+      },
     ],
     { signal: AbortSignal.timeout(TIMEOUT_MS) },
   )) {
@@ -91,9 +113,15 @@ export async function extractMemories(
     const newest = pending.at(-1);
     if (!newest || pending.length < MIN_MESSAGES) return;
 
+    const existing = (await listMemories(db, userId)).slice(0, MAX_EXISTING);
     const { facts, memories } = await extract(
       providers,
       pending.map((m) => m.content),
+      existing.map((m) => m.content),
+    );
+    const replaced = resolveReplaces(
+      memories,
+      existing.map((m) => m.id),
     );
     for (const fact of facts) {
       await upsertFact(db, userId, fact, newest.id);
@@ -109,13 +137,13 @@ export async function extractMemories(
     for (const [i, memory] of memories.entries()) {
       const embedding = vectors[i];
       if (!embedding) continue;
-      const [near] = await nearestMemories(
-        db,
-        userId,
-        embedding,
-        EMBEDDING_MODEL,
-        { limit: 1, minSimilarity: 0 },
-      );
+      const replacedId = replaced[i];
+      const [near] = replacedId
+        ? []
+        : await nearestMemories(db, userId, embedding, EMBEDDING_MODEL, {
+            limit: 1,
+            minSimilarity: 0,
+          });
       const action = near ? decide(near.similarity) : "insert";
       if (action === "duplicate") {
         stats.duplicates++;
@@ -131,8 +159,10 @@ export async function extractMemories(
         importance: memory.importance,
       });
       stats.inserted++;
-      if (near && action === "supersede") {
-        await supersedeMemory(db, userId, near.id, created.id);
+      const oldId =
+        replacedId ?? (action === "supersede" ? near?.id : undefined);
+      if (oldId) {
+        await supersedeMemory(db, userId, oldId, created.id);
         stats.superseded++;
       }
     }

@@ -11,6 +11,7 @@ import {
   recentMessages,
   saveAssistantMessage,
 } from "../db/messages";
+import { withRetry } from "../db/retry";
 import { SEED_USER_ID } from "../db/schema";
 import { providersFromEnv, streamChat } from "../llm/gateway";
 import { systemPrompt } from "../llm/prompts/system";
@@ -50,13 +51,15 @@ export const chat = new Hono<{ Bindings: Env }>().post(
     const userId = SEED_USER_ID;
     const database = db(c.env);
     try {
-      const { found } = await insertUserMessage(database, {
-        userId,
-        conversationId,
-        id: userMessageId,
-        text,
-        lang: langOf(text),
-      });
+      const { found } = await withRetry(() =>
+        insertUserMessage(database, {
+          userId,
+          conversationId,
+          id: userMessageId,
+          text,
+          lang: langOf(text),
+        }),
+      );
       if (!found) return c.json({ error: "not_found" }, 404);
     } catch (error) {
       console.error("chat.stream insert failed", error);
@@ -91,12 +94,15 @@ export const chat = new Hono<{ Bindings: Env }>().post(
         let known: Context = { facts: [], memories: [] };
         let wantsTitle = false;
         try {
-          const [existing, recent, conversation, context] = await Promise.all([
-            getMessage(database, userId, assistantMessageId),
-            recentMessages(database, userId, conversationId),
-            getConversation(database, userId, conversationId),
-            memory ? contextFor(database, c.env, userId, text) : known,
-          ]);
+          const [existing, recent, conversation, context] = await withRetry(
+            () =>
+              Promise.all([
+                getMessage(database, userId, assistantMessageId),
+                recentMessages(database, userId, conversationId),
+                getConversation(database, userId, conversationId),
+                memory ? contextFor(database, c.env, userId, text) : known,
+              ]),
+          );
           if (existing) {
             await send({ type: "done", message: existing });
             return;

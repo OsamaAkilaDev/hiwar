@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { decide, parseExtraction } from "./extract";
+import { decide, parseExtraction, resolveReplaces } from "./extract";
 
 test("parseExtraction reads fenced JSON and strips unknown fields", () => {
   const raw =
@@ -33,4 +33,34 @@ test("decide thresholds", () => {
   expect(decide(0.95)).toBe("duplicate");
   expect(decide(0.88)).toBe("supersede");
   expect(decide(0.5)).toBe("insert");
+});
+
+test("parseExtraction keeps a valid replaces and drops invalid ones", () => {
+  const { memories } = parseExtraction(
+    JSON.stringify({
+      facts: [],
+      memories: [
+        { content: "a", replaces: 2 },
+        { content: "b", replaces: 0 },
+        { content: "c", replaces: "x" },
+        { content: "d" },
+      ],
+    }),
+  );
+  expect(memories.map((m) => m.replaces)).toEqual([
+    2,
+    undefined,
+    undefined,
+    undefined,
+  ]);
+});
+
+test("resolveReplaces maps numbers to ids and drops out-of-range", () => {
+  const items = [{ replaces: 1 }, { replaces: 3 }, { replaces: 4 }, {}];
+  expect(resolveReplaces(items, ["a", "b", "c"])).toEqual([
+    "a",
+    "c",
+    undefined,
+    undefined,
+  ]);
 });
