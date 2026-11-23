@@ -11,6 +11,8 @@ export const ar: Record<MessageKey, string> = {
   thinking: "يفكّر…",
   stopped: "توقّف الرد",
   noResponse: "ما وصل رد.",
+  offline: "ما في اتصال بالإنترنت.",
+  loadFailed: "ما قدرنا نحمّل المحادثة.",
   retry: "جرّب مرة ثانية",
   newChat: "محادثة جديدة",
   loading: "جاري تحميل المحادثة",

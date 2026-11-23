@@ -62,7 +62,13 @@ export function NoResponse({ onRetry }: { onRetry?: () => void }) {
   );
 }
 
-function Note({ tone, children }: { tone?: "danger"; children: ReactNode }) {
+export function Note({
+  tone,
+  children,
+}: {
+  tone?: "danger";
+  children: ReactNode;
+}) {
   return (
     <p
       role="status"
@@ -73,7 +79,7 @@ function Note({ tone, children }: { tone?: "danger"; children: ReactNode }) {
   );
 }
 
-function RetryButton({ onRetry }: { onRetry?: () => void }) {
+export function RetryButton({ onRetry }: { onRetry?: () => void }) {
   const t = useT();
   if (!onRetry) return null;
   return (

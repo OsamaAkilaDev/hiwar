@@ -22,7 +22,6 @@ export default defineConfig({
         display: "standalone",
         background_color: "#0d0e10",
         theme_color: "#0d0e10",
-        dir: "auto" as "ltr", // valid per spec; plugin types omit it
         lang: "en",
         icons: [
           { src: "pwa-64x64.png", sizes: "64x64", type: "image/png" },

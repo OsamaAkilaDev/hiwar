@@ -7,6 +7,8 @@ export const en = {
   thinking: "Thinking",
   stopped: "Stopped",
   noResponse: "No response.",
+  offline: "You're offline.",
+  loadFailed: "Couldn't load this conversation.",
   retry: "Retry",
   newChat: "New chat",
   loading: "Loading conversation",

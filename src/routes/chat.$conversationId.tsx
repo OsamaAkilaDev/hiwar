@@ -1,7 +1,8 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useRouter } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { Composer } from "../features/chat/components/Composer";
 import { MessageList } from "../features/chat/components/MessageList";
+import { Note, RetryButton } from "../features/chat/components/MessageRow";
 import { useConversation } from "../features/chat/hooks/useConversation";
 import { useSendMessage } from "../features/chat/hooks/useSendMessage";
 import { useT } from "../i18n";
@@ -15,6 +16,7 @@ export const Route = createFileRoute("/chat/$conversationId")({
       queryFn: ({ signal }) => getMessages(conversationId, { signal }),
     }),
   pendingComponent: ChatSkeleton,
+  errorComponent: ChatError,
   component: ChatScreen,
 });
 
@@ -90,6 +92,20 @@ function ChatSkeleton() {
           />
         ))}
       </div>
+    </main>
+  );
+}
+
+// Shown when the conversation can't load, e.g. the installed app opened offline.
+function ChatError() {
+  const t = useT();
+  const router = useRouter();
+  return (
+    <main className="mx-auto flex w-full max-w-[38rem] flex-1 flex-col justify-center px-4 pb-[12vh]">
+      <Note>
+        {navigator.onLine ? t("loadFailed") : t("offline")}
+        <RetryButton onRetry={() => router.invalidate()} />
+      </Note>
     </main>
   );
 }
