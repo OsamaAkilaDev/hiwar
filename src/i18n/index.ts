@@ -11,5 +11,9 @@ const dictionaries: Record<"ar" | "en", Record<MessageKey, string>> = {
 
 export const useT = () => {
   const dictionary = dictionaries[usePrefs((s) => s.locale)];
-  return (key: MessageKey) => dictionary[key];
+  return (key: MessageKey, vars?: Record<string, string>) =>
+    dictionary[key].replace(
+      /\{(\w+)\}/g,
+      (match, name) => vars?.[name] ?? match,
+    );
 };

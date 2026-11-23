@@ -31,11 +31,16 @@ export const usePrefs = create<Prefs>((set) => ({
     set({ locale });
   },
   setTheme: (theme) => {
+    const freeze = document.createElement("style");
+    freeze.textContent = "*,*::before,*::after{transition:none!important}";
+    document.head.append(freeze);
     persist("hiwar.theme", theme);
     html.dataset.theme = theme;
     document
       .querySelector('meta[name="theme-color"]')
       ?.setAttribute("content", THEME_COLOR[theme]);
     set({ theme });
+    getComputedStyle(document.body).opacity;
+    requestAnimationFrame(() => freeze.remove());
   },
 }));

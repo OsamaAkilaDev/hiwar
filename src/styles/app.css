@@ -203,3 +203,66 @@
     transition-duration: 0.01ms !important;
   }
 }
+
+.drawer {
+  --from: -100%;
+  translate: var(--from) 0;
+  transition:
+    translate 200ms cubic-bezier(0.2, 0, 0, 1),
+    display 200ms allow-discrete,
+    overlay 200ms allow-discrete;
+}
+
+[dir="rtl"] .drawer {
+  --from: 100%;
+}
+
+.drawer[open] {
+  translate: 0 0;
+  transition-duration: 350ms;
+
+  @starting-style {
+    translate: var(--from) 0;
+  }
+}
+
+.modal {
+  opacity: 0;
+  scale: 0.99;
+  transition:
+    opacity 150ms ease-out,
+    scale 150ms ease-out,
+    display 150ms allow-discrete,
+    overlay 150ms allow-discrete;
+}
+
+.modal[open] {
+  opacity: 1;
+  scale: 1;
+  transition-duration: 200ms;
+
+  @starting-style {
+    opacity: 0;
+    scale: 0.98;
+  }
+}
+
+:is(.drawer, .modal)::backdrop {
+  opacity: 0;
+  transition:
+    opacity 200ms,
+    display 200ms allow-discrete,
+    overlay 200ms allow-discrete;
+}
+
+:is(.drawer, .modal)[open]::backdrop {
+  opacity: 1;
+
+  @starting-style {
+    opacity: 0;
+  }
+}
+
+.drawer[open]::backdrop {
+  transition-duration: 350ms;
+}
