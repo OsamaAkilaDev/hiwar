@@ -11,7 +11,7 @@ import {
 } from "../db/messages";
 import { providersFromEnv, streamChat } from "../llm/gateway";
 import { systemPrompt } from "../llm/prompts/system";
-import type { Provider } from "../llm/types";
+import type { ChatMessage, Provider } from "../llm/types";
 
 type Payload<E = StreamEvent> = E extends unknown
   ? Omit<E, "messageId" | "seq">
@@ -41,26 +41,39 @@ export const chat = new Hono<{ Bindings: Env }>().post(
           } as StreamEvent),
         );
 
-      await insertUserMessage(database, {
-        conversationId,
-        id: userMessageId,
-        text,
-        lang: /[؀-ۿ]/.test(text) ? "ar" : "en",
-      });
-
-      const existing = await getMessage(database, assistantMessageId);
-      if (existing) {
-        await send({ type: "done", message: existing });
-        return;
-      }
-
       await send({ type: "start" });
 
-      const history = (await recentMessages(database, conversationId))
-        .filter(
-          (m) => m.content && m.status !== "error" && m.status !== "streaming",
-        )
-        .map(({ role, content }) => ({ role, content }));
+      let history: ChatMessage[];
+      try {
+        await insertUserMessage(database, {
+          conversationId,
+          id: userMessageId,
+          text,
+          lang: /[؀-ۿ]/.test(text) ? "ar" : "en",
+        });
+        const [existing, recent] = await Promise.all([
+          getMessage(database, assistantMessageId),
+          recentMessages(database, conversationId),
+        ]);
+        if (existing) {
+          await send({ type: "done", message: existing });
+          return;
+        }
+        history = recent
+          .filter(
+            (m) =>
+              m.content && m.status !== "error" && m.status !== "streaming",
+          )
+          .map(({ role, content }) => ({ role, content }));
+      } catch (error) {
+        console.error("chat.stream context failed", error);
+        await send({
+          type: "error",
+          message: "The response failed. Please try again.",
+          retryable: true,
+        });
+        return;
+      }
 
       let content = "";
       let provider: Provider | undefined;
