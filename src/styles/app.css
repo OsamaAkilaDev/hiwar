@@ -58,6 +58,8 @@
     -webkit-font-smoothing: antialiased;
     caret-color: var(--accent);
     scrollbar-color: var(--border) transparent;
+    /* Sticky header (3.5rem) and composer keep focused targets visible. */
+    scroll-padding-block: 3.5rem 7rem;
   }
 
   ::selection {
