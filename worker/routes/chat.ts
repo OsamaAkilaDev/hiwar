@@ -26,10 +26,16 @@ export const chat = new Hono<{ Bindings: Env }>().post(
     if (!parsed.success) return c.json({ error: "invalid_request" }, 400);
     const { conversationId, userMessageId, assistantMessageId, text, locale } =
       parsed.data;
-    const { signal } = c.req.raw;
 
     return streamSSE(c, async (stream) => {
       const startedAt = Date.now();
+      // The client is gone when either the request aborts or the response
+      // stream is cancelled; dev proxies don't always surface the former.
+      const upstream = new AbortController();
+      const disconnect = () => upstream.abort();
+      c.req.raw.signal.addEventListener("abort", disconnect, { once: true });
+      stream.onAbort(disconnect);
+      const { signal } = upstream;
       const database = db(c.env);
       let seq = 0;
       const send = (event: Payload) =>

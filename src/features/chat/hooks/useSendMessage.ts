@@ -52,7 +52,7 @@ export function useSendMessage(conversationId: string) {
           userMessageId: user.id,
           assistantMessageId: assistant.id,
           text: user.content,
-          locale: /[؀-ۿ]/.test(user.content) ? "ar" : "en",
+          locale: document.documentElement.lang === "ar" ? "ar" : "en",
         },
         abort.signal,
       );
@@ -67,7 +67,8 @@ export function useSendMessage(conversationId: string) {
           ended = true;
         }
       }
-      if (!ended) settle({ status: "error" });
+      if (!ended)
+        settle({ status: abort.signal.aborted ? "stopped" : "error" });
     } catch {
       settle({ status: abort.signal.aborted ? "stopped" : "error" });
     } finally {

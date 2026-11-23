@@ -2,7 +2,7 @@ import type { ChatMessage, Provider } from "../types";
 
 const CHUNK_SIZE = 8;
 const CHUNK_DELAY_MS = 30;
-const SLOW_DELAY_MS = 4000;
+const SLOW_DELAY_MS = 2000;
 
 const ANSWER = `React هي مكتبة جافاسكريبت لبناء واجهات المستخدم من مكونات صغيرة قابلة لإعادة الاستخدام.
 
