@@ -11,5 +11,6 @@ export default defineConfig({
     maskable: { ...minimal2023Preset.maskable, resizeOptions: { background } },
     apple: { ...minimal2023Preset.apple, resizeOptions: { background } },
   },
-  images: ["public/favicon.svg"],
+  // PWA/apple icons need a solid tile; the tab favicon (public/favicon.svg) adapts to the system theme instead.
+  images: ["public/app-icon.svg"],
 });
