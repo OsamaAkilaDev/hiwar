@@ -1,7 +1,7 @@
-import { and, desc, eq, lt, sql } from "drizzle-orm";
+import { and, desc, eq, exists, lt, sql } from "drizzle-orm";
 import type { ErrorCode, MessageDTO } from "../../shared/events";
 import type { DB } from "./client";
-import { conversations, messages, SEED_USER_ID } from "./schema";
+import { conversations, messages } from "./schema";
 
 type Row = typeof messages.$inferSelect;
 
@@ -10,6 +10,19 @@ type ErrorPart = { type: "error"; code?: ErrorCode; retryable: boolean };
 const errorPart = (parts: unknown) =>
   (parts as { type?: string }[]).find(
     (p): p is ErrorPart => p.type === "error",
+  );
+
+const ownedBy = (db: DB, userId: string) =>
+  exists(
+    db
+      .select({ id: conversations.id })
+      .from(conversations)
+      .where(
+        and(
+          eq(conversations.id, messages.conversationId),
+          eq(conversations.userId, userId),
+        ),
+      ),
   );
 
 const toDTO = (row: Row): MessageDTO => {
@@ -26,40 +39,56 @@ const toDTO = (row: Row): MessageDTO => {
 };
 
 // One statement (one round trip): upsert the conversation, insert the message.
+// `found` is false when the conversation exists but belongs to someone else.
 export async function insertUserMessage(
   db: DB,
   input: {
+    userId: string;
     conversationId: string;
     id: string;
     text: string;
     lang: string;
-    userId?: string;
   },
-): Promise<{ inserted: boolean }> {
-  const { conversationId, id, text, lang, userId = SEED_USER_ID } = input;
-  const rows = await db.execute(sql`
-    with conversation as (
+): Promise<{ found: boolean; inserted: boolean }> {
+  const { userId, conversationId, id, text, lang } = input;
+  const { rows } = await db.execute<{ found: number; inserted: number }>(sql`
+    with created as (
       insert into ${conversations} (id, user_id)
       values (${conversationId}, ${userId})
       on conflict do nothing
+      returning id
+    ),
+    owned as (
+      select id from created
+      union all
+      select id from ${conversations}
+      where id = ${conversationId} and user_id = ${userId}
+    ),
+    message as (
+      insert into ${messages} (id, conversation_id, role, content, status, lang)
+      select ${id}, id, 'user', ${text}, 'complete', ${lang} from owned
+      on conflict do nothing
+      returning id
     )
-    insert into ${messages} (id, conversation_id, role, content, status, lang)
-    values (${id}, ${conversationId}, 'user', ${text}, 'complete', ${lang})
-    on conflict do nothing
-    returning id
+    select
+      (select count(*) from owned)::int as found,
+      (select count(*) from message)::int as inserted
   `);
-  return { inserted: rows.rowCount === 1 };
+  return { found: rows[0]?.found === 1, inserted: rows[0]?.inserted === 1 };
 }
 
 export async function recentMessages(
   db: DB,
+  userId: string,
   conversationId: string,
   limit = 20,
 ): Promise<MessageDTO[]> {
   const rows = await db
     .select()
     .from(messages)
-    .where(eq(messages.conversationId, conversationId))
+    .where(
+      and(eq(messages.conversationId, conversationId), ownedBy(db, userId)),
+    )
     .orderBy(desc(messages.id))
     .limit(limit);
   return rows.reverse().map(toDTO);
@@ -67,6 +96,7 @@ export async function recentMessages(
 
 export async function listMessages(
   db: DB,
+  userId: string,
   conversationId: string,
   { before, limit = 50 }: { before?: string; limit?: number } = {},
 ): Promise<MessageDTO[]> {
@@ -76,6 +106,7 @@ export async function listMessages(
     .where(
       and(
         eq(messages.conversationId, conversationId),
+        ownedBy(db, userId),
         before ? lt(messages.id, before) : undefined,
       ),
     )
@@ -111,8 +142,12 @@ export async function saveAssistantMessage(
 
 export async function getMessage(
   db: DB,
+  userId: string,
   id: string,
 ): Promise<MessageDTO | undefined> {
-  const [row] = await db.select().from(messages).where(eq(messages.id, id));
+  const [row] = await db
+    .select()
+    .from(messages)
+    .where(and(eq(messages.id, id), ownedBy(db, userId)));
   return row && toDTO(row);
 }

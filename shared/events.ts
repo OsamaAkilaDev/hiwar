@@ -30,6 +30,19 @@ export const MessageDTO = z.object({
 });
 export type MessageDTO = z.infer<typeof MessageDTO>;
 
+export const ConversationDTO = z.object({
+  id: z.string(),
+  title: z.string().nullable(),
+  lastMessageAt: z.string(),
+});
+export type ConversationDTO = z.infer<typeof ConversationDTO>;
+
+export const ConversationList = z.object({
+  conversations: z.array(ConversationDTO),
+  nextCursor: z.string().nullable(),
+});
+export type ConversationList = z.infer<typeof ConversationList>;
+
 const base = { messageId: z.string(), seq: z.number() };
 
 export const StreamEvent = z.discriminatedUnion("type", [

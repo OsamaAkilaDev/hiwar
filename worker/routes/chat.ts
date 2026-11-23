@@ -9,6 +9,7 @@ import {
   recentMessages,
   saveAssistantMessage,
 } from "../db/messages";
+import { SEED_USER_ID } from "../db/schema";
 import { providersFromEnv, streamChat } from "../llm/gateway";
 import { systemPrompt } from "../llm/prompts/system";
 import type { ChatMessage, Provider } from "../llm/types";
@@ -33,6 +34,22 @@ export const chat = new Hono<{ Bindings: Env }>().post(
     const { conversationId, userMessageId, assistantMessageId, text, locale } =
       parsed.data;
 
+    const userId = SEED_USER_ID;
+    const database = db(c.env);
+    try {
+      const { found } = await insertUserMessage(database, {
+        userId,
+        conversationId,
+        id: userMessageId,
+        text,
+        lang: /[؀-ۿ]/.test(text) ? "ar" : "en",
+      });
+      if (!found) return c.json({ error: "not_found" }, 404);
+    } catch (error) {
+      console.error("chat.stream insert failed", error);
+      return c.json({ error: "server" }, 500);
+    }
+
     // Register the whole turn with waitUntil: once the client disconnects the
     // runtime may cancel unregistered work, and the "stopped" save must run.
     return streamSSE(c, (stream) => {
@@ -45,7 +62,6 @@ export const chat = new Hono<{ Bindings: Env }>().post(
         c.req.raw.signal.addEventListener("abort", disconnect, { once: true });
         stream.onAbort(disconnect);
         const { signal } = upstream;
-        const database = db(c.env);
         let seq = 0;
         const send = (event: Payload) =>
           stream.write(
@@ -60,15 +76,9 @@ export const chat = new Hono<{ Bindings: Env }>().post(
 
         let history: ChatMessage[];
         try {
-          await insertUserMessage(database, {
-            conversationId,
-            id: userMessageId,
-            text,
-            lang: /[؀-ۿ]/.test(text) ? "ar" : "en",
-          });
           const [existing, recent] = await Promise.all([
-            getMessage(database, assistantMessageId),
-            recentMessages(database, conversationId),
+            getMessage(database, userId, assistantMessageId),
+            recentMessages(database, userId, conversationId),
           ]);
           if (existing) {
             await send({ type: "done", message: existing });
@@ -90,6 +100,7 @@ export const chat = new Hono<{ Bindings: Env }>().post(
           return;
         }
 
+        const providers = providersFromEnv(c.env);
         let content = "";
         let provider: Provider | undefined;
         let ttftMs: number | undefined;
@@ -97,7 +108,7 @@ export const chat = new Hono<{ Bindings: Env }>().post(
 
         try {
           for await (const chunk of streamChat(
-            providersFromEnv(c.env),
+            providers,
             [{ role: "system", content: systemPrompt(locale) }, ...history],
             { signal },
           )) {
