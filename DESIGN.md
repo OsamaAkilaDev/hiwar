@@ -133,7 +133,7 @@ A near-achromatic cool graphite ramp (hue 265, chroma under 0.01) carrying a sin
 - **Graphite Night** (bg): page background, sticky header and composer dock, so they read as part of the page rather than bars.
 - **Graphite Raised** (surface): composer body, code blocks, skeleton prose lines.
 - **Graphite Lifted** (surface-2): the user bubble, inline code, ghost-button hover, disabled Send, skeleton bubble.
-- **Hairline** (border): composer and code-block outlines, table rules, blockquote rule, scrollbar thumb.
+- **Hairline** (border): composer and code-block outlines, table rules, blockquote rule, scrollbar thumb. Composer border is a documented exception to 1.4.11: placeholder, Send button and lift identify the control.
 - **Paper White** (fg): body text; also the Stop button fill.
 - **Muted Ash** (fg-muted): header icon at rest, blockquote text, thinking dots.
 - **Quiet Ash** (fg-subtle): placeholders, list markers, status notes, composer focus border.
@@ -191,7 +191,7 @@ Flat by default. Depth comes from three tonal steps of graphite (bg, surface, su
 
 ## Shapes
 
-Soft, small-to-medium radii scaled to object size: 0.3rem inline code, 6px text buttons, 8px icon buttons, 0.6rem code blocks, 12px composer, 18px user bubble, full circles for the thinking dots. Borders are always 1px hairlines; no border ever carries color except the composer's focus shift to fg-subtle.
+Soft, small-to-medium radii scaled to object size: 0.3rem inline code, 6px text buttons, 8px icon buttons, 0.6rem code blocks, 17px composer (8px inner radius + 8px padding + 1px border), 18px user bubble, full circles for the thinking dots. Borders are always 1px hairlines; no border ever carries color except the composer's focus shift to fg-subtle.
 
 ## Components
 
@@ -208,7 +208,7 @@ Square, quiet, icon-first, 36px.
 
 ### Inputs / Fields
 
-- **Composer:** surface fill, 1px hairline border, 12px radius, 8px padding, composer lift shadow. The textarea is transparent, auto-grows from 40px to 208px, and uses `dir="auto"`.
+- **Composer:** surface fill, 1px hairline border, 17px radius, 8px padding, composer lift shadow. The textarea is transparent, auto-grows from 40px to 208px, and uses `dir="auto"`.
 - **Focus:** the textarea has no outline of its own; the whole composer border shifts to fg-subtle on `focus-within`.
 - **Keys:** Enter sends (respecting IME composition), Shift+Enter breaks the line.
 

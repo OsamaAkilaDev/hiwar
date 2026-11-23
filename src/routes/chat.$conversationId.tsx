@@ -20,7 +20,8 @@ export const Route = createFileRoute("/chat/$conversationId")({
   component: ChatScreen,
 });
 
-const column = "mx-auto w-full max-w-[38rem] px-4";
+const column =
+  "mx-auto w-full max-w-[38rem] pr-[max(1rem,env(safe-area-inset-right))] pl-[max(1rem,env(safe-area-inset-left))]";
 
 function ChatScreen() {
   const t = useT();
@@ -32,12 +33,22 @@ function ChatScreen() {
   const watching = useRef<string | null>(null);
 
   useEffect(() => {
-    if (streamingId) watching.current = streamingId;
+    if (streamingId) {
+      watching.current = streamingId;
+      setAnnouncement(t("thinking"));
+      return;
+    }
     const done = messages.find((m) => m.id === watching.current);
-    if (streamingId || !done || done.status === "streaming") return;
+    if (!done || done.status === "streaming") return;
     watching.current = null;
-    if (done.status === "complete") setAnnouncement(done.content.slice(0, 600));
-  }, [streamingId, messages]);
+    setAnnouncement(
+      done.status === "complete"
+        ? done.content.slice(0, 600)
+        : done.status === "stopped"
+          ? t("stopped")
+          : t(done.error ? `error.${done.error}` : "error.incomplete"),
+    );
+  }, [streamingId, messages, t]);
 
   const composer = (
     <Composer isStreaming={isStreaming} onSend={send} onStop={stop} />
@@ -48,7 +59,7 @@ function ChatScreen() {
       <main
         className={`${column} flex flex-1 flex-col justify-center pb-[12vh]`}
       >
-        <h1 className="mb-6 text-center font-medium text-2xl tracking-tight">
+        <h1 className="mb-6 text-center font-medium text-2xl tracking-tight rtl:tracking-normal">
           {t("emptyHeading")}
         </h1>
         {composer}
@@ -68,7 +79,7 @@ function ChatScreen() {
       <div aria-live="polite" className="sr-only">
         {announcement}
       </div>
-      <div className="sticky bottom-0 bg-bg pb-4">
+      <div className="sticky bottom-0 bg-bg pb-[max(1rem,env(safe-area-inset-bottom))]">
         <div className={column}>{composer}</div>
       </div>
     </main>
@@ -101,7 +112,7 @@ function ChatError() {
   const t = useT();
   const router = useRouter();
   return (
-    <main className="mx-auto flex w-full max-w-[38rem] flex-1 flex-col justify-center px-4 pb-[12vh]">
+    <main className={`${column} flex flex-1 flex-col justify-center pb-[12vh]`}>
       <Note>
         {navigator.onLine ? t("loadFailed") : t("offline")}
         <RetryButton onRetry={() => router.invalidate()} />

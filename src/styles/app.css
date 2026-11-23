@@ -17,6 +17,7 @@
   --accent-fg: oklch(0.17 0.02 255);
   --danger: oklch(0.72 0.14 25);
   --selection: oklch(0.72 0.12 255 / 0.32);
+  --lift: 0 8px 24px -12px rgb(0 0 0 / 0.5);
 }
 
 [data-theme="light"] {
@@ -32,6 +33,7 @@
   --accent-fg: oklch(0.99 0.003 258);
   --danger: oklch(0.55 0.18 25);
   --selection: oklch(0.52 0.15 258 / 0.2);
+  --lift: 0 8px 24px -14px rgb(15 20 30 / 0.14);
 }
 
 @theme inline {
@@ -45,6 +47,7 @@
   --color-accent: var(--accent);
   --color-accent-fg: var(--accent-fg);
   --color-danger: var(--danger);
+  --shadow-lift: var(--lift);
   --font-sans: "Inter Variable", "Vazirmatn Variable", system-ui, sans-serif;
   --font-mono: "JetBrains Mono Variable", ui-monospace, monospace;
 }
@@ -59,7 +62,8 @@
     caret-color: var(--accent);
     scrollbar-color: var(--border) transparent;
     /* Sticky header (3.5rem) and composer keep focused targets visible. */
-    scroll-padding-block: 3.5rem 7rem;
+    scroll-padding-block: calc(3.5rem + env(safe-area-inset-top))
+      calc(7rem + env(safe-area-inset-bottom));
   }
 
   ::selection {
@@ -74,6 +78,7 @@
   :lang(ar),
   [lang="ar"] {
     line-height: 1.85;
+    letter-spacing: 0;
   }
 }
 
@@ -82,6 +87,7 @@
   font-size: 1rem;
   line-height: 1.7;
   text-align: start;
+  overflow-wrap: anywhere;
 
   & > * + *,
   & > * > * + * {
@@ -101,6 +107,9 @@
   }
   & h3 {
     font-size: 1rem;
+  }
+  & :where(p, li) {
+    text-wrap: pretty;
   }
   & :where(ul, ol) {
     padding-inline-start: 1.4em;
@@ -154,6 +163,9 @@
     text-align: left;
   }
   & table {
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
     width: 100%;
     border-collapse: collapse;
     font-size: 0.9rem;
@@ -187,6 +199,7 @@
   *::before,
   *::after {
     animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
 }

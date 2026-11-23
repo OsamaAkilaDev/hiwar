@@ -26,7 +26,7 @@ function Root() {
 
   return (
     <div className="flex min-h-dvh flex-col">
-      <header className="sticky top-0 z-10 flex h-14 items-center justify-between bg-bg px-4">
+      <header className="sticky top-0 z-10 flex min-h-[calc(3.5rem+env(safe-area-inset-top))] items-center justify-between bg-bg pt-[env(safe-area-inset-top)] pr-[max(1rem,env(safe-area-inset-right))] pl-[max(1rem,env(safe-area-inset-left))]">
         <span className="font-semibold tracking-tight">Hiwar</span>
         <div className="flex items-center gap-1.5">
           {/* Shows the other language in its own script; lang keeps the

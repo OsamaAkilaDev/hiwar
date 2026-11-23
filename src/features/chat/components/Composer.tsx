@@ -59,7 +59,12 @@ export function Composer({ isStreaming, onSend, onStop }: Props) {
   };
 
   const onKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
+    if (
+      e.key === "Enter" &&
+      !e.shiftKey &&
+      !e.nativeEvent.isComposing &&
+      !matchMedia("(pointer: coarse)").matches
+    ) {
       submit(e);
     }
   };
@@ -67,7 +72,7 @@ export function Composer({ isStreaming, onSend, onStop }: Props) {
   return (
     <form
       onSubmit={submit}
-      className="flex items-end gap-2 rounded-xl border border-border bg-surface p-2 shadow-[0_8px_24px_-12px_rgb(0_0_0/0.5)] transition-colors focus-within:border-fg-subtle"
+      className="flex items-end gap-2 rounded-[17px] border border-border bg-surface p-2 shadow-lift transition-colors focus-within:border-fg-subtle"
     >
       <label htmlFor="composer" className="sr-only">
         {t("composerLabel")}
@@ -78,12 +83,12 @@ export function Composer({ isStreaming, onSend, onStop }: Props) {
         dir="auto"
         rows={1}
         // biome-ignore lint/a11y/noAutofocus: the composer is the page's only task
-        autoFocus
+        autoFocus={matchMedia("(pointer: fine)").matches}
         value={text}
         onChange={(e) => setText(e.target.value)}
         onKeyDown={onKeyDown}
         placeholder={t("composerPlaceholder")}
-        className="max-h-52 min-h-10 overflow-y-auto flex-1 resize-none bg-transparent px-2 py-2 leading-relaxed outline-none placeholder:text-fg-subtle"
+        className="max-h-52 min-h-10 overflow-y-auto flex-1 resize-none bg-transparent px-2 py-2 leading-relaxed outline-none [&:lang(ar)]:leading-[1.85] placeholder:text-fg-subtle"
       />
       {isStreaming ? (
         <button
@@ -100,7 +105,7 @@ export function Composer({ isStreaming, onSend, onStop }: Props) {
           type="submit"
           disabled={!canSend}
           aria-label={t("send")}
-          className="grid size-9 shrink-0 place-items-center rounded-lg bg-accent text-accent-fg transition-opacity hover:opacity-90 disabled:bg-surface-2 disabled:text-fg-subtle"
+          className="grid size-9 shrink-0 place-items-center rounded-lg bg-accent text-accent-fg transition-[background-color,color,opacity] hover:opacity-90 disabled:bg-surface-2 disabled:text-fg-subtle"
         >
           <ArrowUp className="size-4.5" strokeWidth={2.25} aria-hidden />
         </button>
