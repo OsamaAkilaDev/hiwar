@@ -4,6 +4,7 @@ import { Composer } from "../features/chat/components/Composer";
 import { MessageList } from "../features/chat/components/MessageList";
 import { useConversation } from "../features/chat/hooks/useConversation";
 import { useSendMessage } from "../features/chat/hooks/useSendMessage";
+import { useT } from "../i18n";
 import { getMessages } from "../lib/api";
 import { queryKeys } from "../lib/query-keys";
 
@@ -20,6 +21,7 @@ export const Route = createFileRoute("/chat/$conversationId")({
 const column = "mx-auto w-full max-w-[38rem] px-4";
 
 function ChatScreen() {
+  const t = useT();
   const { conversationId } = Route.useParams();
   const { data: messages = [] } = useConversation(conversationId);
   const { send, retry, stop, streamingId, isStreaming } =
@@ -45,7 +47,7 @@ function ChatScreen() {
         className={`${column} flex flex-1 flex-col justify-center pb-[12vh]`}
       >
         <h1 className="mb-6 text-center font-medium text-2xl tracking-tight">
-          What's on your mind?
+          {t("emptyHeading")}
         </h1>
         {composer}
       </main>
@@ -72,10 +74,12 @@ function ChatScreen() {
 }
 
 function ChatSkeleton() {
+  const t = useT();
   return (
     <main
       className={`${column} flex flex-1 flex-col gap-7 pt-4`}
       aria-busy="true"
+      aria-label={t("loading")}
     >
       <div className="ms-auto h-10 w-2/5 animate-pulse rounded-[18px] bg-surface-2" />
       <div className="flex flex-col gap-2.5">

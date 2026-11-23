@@ -3,8 +3,34 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <meta name="theme-color" content="#1c1d20" />
+    <meta name="theme-color" content="#0d0e10" />
     <title>Hiwar</title>
+    <script>
+      (() => {
+        const get = (key) => {
+          try {
+            return localStorage.getItem(key);
+          } catch {
+            return null;
+          }
+        };
+        const saved = get("hiwar.locale");
+        const locale =
+          saved === "ar" || saved === "en"
+            ? saved
+            : navigator.languages.some((l) => l.toLowerCase().startsWith("ar"))
+              ? "ar"
+              : "en";
+        const theme = get("hiwar.theme") === "light" ? "light" : "dark";
+        const html = document.documentElement;
+        html.lang = locale;
+        html.dir = locale === "ar" ? "rtl" : "ltr";
+        html.dataset.theme = theme;
+        document
+          .querySelector('meta[name="theme-color"]')
+          .setAttribute("content", theme === "light" ? "#fbfcfd" : "#0d0e10");
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

@@ -1,11 +1,11 @@
 import { and, desc, eq, lt, sql } from "drizzle-orm";
-import type { MessageDTO } from "../../shared/events";
+import type { ErrorCode, MessageDTO } from "../../shared/events";
 import type { DB } from "./client";
 import { conversations, messages, SEED_USER_ID } from "./schema";
 
 type Row = typeof messages.$inferSelect;
 
-type ErrorPart = { type: "error"; message: string; retryable: boolean };
+type ErrorPart = { type: "error"; code?: ErrorCode; retryable: boolean };
 
 const errorPart = (parts: unknown) =>
   (parts as { type?: string }[]).find(
@@ -21,7 +21,7 @@ const toDTO = (row: Row): MessageDTO => {
     content: row.content,
     status: row.status,
     createdAt: row.createdAt.toISOString(),
-    ...(failure && { error: failure.message, retryable: failure.retryable }),
+    ...(failure && { error: failure.code, retryable: failure.retryable }),
   };
 };
 
@@ -92,7 +92,7 @@ export async function saveAssistantMessage(
   }: Pick<
     Row,
     "id" | "conversationId" | "content" | "status" | "provider" | "model"
-  > & { error?: Omit<ErrorPart, "type"> },
+  > & { error?: { code: ErrorCode; retryable: boolean } },
 ): Promise<MessageDTO> {
   const parts = error ? [{ type: "error", ...error }] : [];
   return db.transaction(async (tx) => {

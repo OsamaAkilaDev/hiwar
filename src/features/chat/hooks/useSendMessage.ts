@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import type { MessageDTO } from "../../../../shared/events";
 import { HttpError, streamChat } from "../../../lib/api";
 import { newId } from "../../../lib/ids";
+import { usePrefs } from "../../../lib/prefs";
 import { queryKeys } from "../../../lib/query-keys";
 import { useChatStore } from "../store";
 import { createFrameFlusher } from "../stream/frame-flush";
@@ -23,8 +24,8 @@ const interrupted = (
   if (signal.aborted) return { status: "stopped" };
   const error =
     cause instanceof HttpError && cause.status === 429
-      ? "Too many messages. Wait a minute and try again."
-      : "Connection lost.";
+      ? "rate_limited"
+      : "connection";
   return { status: "error", error, retryable: true };
 };
 
@@ -64,7 +65,7 @@ export function useSendMessage(conversationId: string) {
           userMessageId: user.id,
           assistantMessageId: assistant.id,
           text: user.content,
-          locale: document.documentElement.lang === "ar" ? "ar" : "en",
+          locale: usePrefs.getState().locale,
         },
         abort.signal,
       );
@@ -77,7 +78,7 @@ export function useSendMessage(conversationId: string) {
         } else if (event.type === "error") {
           settle({
             status: "error",
-            error: event.message,
+            error: event.code,
             retryable: event.retryable,
           });
           ended = true;

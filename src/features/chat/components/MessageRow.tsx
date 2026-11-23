@@ -1,6 +1,7 @@
 import { RotateCcw } from "lucide-react";
 import { memo, type ReactNode } from "react";
 import type { MessageDTO } from "../../../../shared/events";
+import { useT } from "../../../i18n";
 import { dirProps } from "../../../lib/dir";
 import { useChatStore } from "../store";
 import { Markdown } from "./Markdown";
@@ -12,6 +13,7 @@ export const MessageRow = memo(function MessageRow({
   live,
   onRetry,
 }: Props) {
+  const t = useT();
   const streamed = useChatStore((s) => s.streams[message.id]?.text);
   const text = streamed ?? message.content;
 
@@ -36,11 +38,11 @@ export const MessageRow = memo(function MessageRow({
     <div className="group">
       {text ? <Markdown text={text} /> : null}
       {status === "streaming" && live && !text ? <Thinking /> : null}
-      {stopped ? <Note>Stopped</Note> : null}
+      {stopped ? <Note>{t("stopped")}</Note> : null}
       {empty ? <NoResponse onRetry={onRetry} /> : null}
       {status === "error" ? (
         <Note tone="danger">
-          {message.error ?? "This reply didn't finish."}
+          {t(message.error ? `error.${message.error}` : "error.incomplete")}
           {message.retryable === false ? null : (
             <RetryButton onRetry={onRetry} />
           )}
@@ -50,12 +52,15 @@ export const MessageRow = memo(function MessageRow({
   );
 });
 
-export const NoResponse = ({ onRetry }: { onRetry?: () => void }) => (
-  <Note>
-    No response.
-    <RetryButton onRetry={onRetry} />
-  </Note>
-);
+export function NoResponse({ onRetry }: { onRetry?: () => void }) {
+  const t = useT();
+  return (
+    <Note>
+      {t("noResponse")}
+      <RetryButton onRetry={onRetry} />
+    </Note>
+  );
+}
 
 function Note({ tone, children }: { tone?: "danger"; children: ReactNode }) {
   return (
@@ -69,6 +74,7 @@ function Note({ tone, children }: { tone?: "danger"; children: ReactNode }) {
 }
 
 function RetryButton({ onRetry }: { onRetry?: () => void }) {
+  const t = useT();
   if (!onRetry) return null;
   return (
     <button
@@ -77,16 +83,17 @@ function RetryButton({ onRetry }: { onRetry?: () => void }) {
       className="inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-accent transition-colors hover:bg-surface-2"
     >
       <RotateCcw className="size-3.5 rtl:-scale-x-100" aria-hidden />
-      Retry
+      {t("retry")}
     </button>
   );
 }
 
 function Thinking() {
+  const t = useT();
   return (
     <div
       role="status"
-      aria-label="Thinking"
+      aria-label={t("thinking")}
       className="flex h-7 items-center gap-1"
     >
       {[0, 1, 2].map((i) => (

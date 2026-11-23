@@ -9,6 +9,15 @@ export const ChatStreamRequest = z.object({
 });
 export type ChatStreamRequest = z.infer<typeof ChatStreamRequest>;
 
+export const ErrorCode = z.enum([
+  "unavailable",
+  "cut_off",
+  "server",
+  "connection",
+  "rate_limited",
+]);
+export type ErrorCode = z.infer<typeof ErrorCode>;
+
 export const MessageDTO = z.object({
   id: z.string(),
   conversationId: z.string(),
@@ -16,7 +25,7 @@ export const MessageDTO = z.object({
   content: z.string(),
   status: z.enum(["streaming", "complete", "stopped", "error"]),
   createdAt: z.string(),
-  error: z.string().optional(),
+  error: ErrorCode.optional(),
   retryable: z.boolean().optional(),
 });
 export type MessageDTO = z.infer<typeof MessageDTO>;
@@ -42,7 +51,7 @@ export const StreamEvent = z.discriminatedUnion("type", [
   z.object({
     ...base,
     type: z.literal("error"),
-    message: z.string(),
+    code: ErrorCode,
     retryable: z.boolean(),
   }),
 ]);
