@@ -1,6 +1,6 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "chatbot",
+  "name": "hiwar",
   "main": "./worker/index.ts",
   "compatibility_date": "2026-11-17",
   "compatibility_flags": ["nodejs_compat"],

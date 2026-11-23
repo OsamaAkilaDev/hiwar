@@ -7,6 +7,6 @@ if (!root) throw new Error("#root missing");
 
 createRoot(root).render(
   <StrictMode>
-    <main className="grid min-h-dvh place-items-center">Chatbot</main>
+    <main className="grid min-h-dvh place-items-center">Hiwar</main>
   </StrictMode>,
 );
