@@ -1,0 +1,15 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "buried-raster",
+        "value": "*",
+        "files": ["mockups/hiwar-overhaul.html"],
+        "createdAt": "2026-11-23T14:07:15.685Z",
+        "reason": "Claude's call: intentional faint film-grain overlay (inline SVG noise, overlay blend at 10%), visible by design; mockup file only"
+      }
+    ]
+  }
+}

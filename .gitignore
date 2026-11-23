@@ -22,3 +22,4 @@ worker-configuration.d.ts
 *.tmp.*
 dev-dist/
 .playwright-mcp/
+mockups/
