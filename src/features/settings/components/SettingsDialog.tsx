@@ -23,14 +23,25 @@ const tabs = [
 ] as const;
 
 const swatches: { id: Accent; color: string }[] = [
-  { id: "teal", color: "#2fd0c0" },
+  { id: "teal", color: "#7cd0c2" },
   { id: "saffron", color: "#f2b94b" },
 ];
 
-function Row({ label, children }: { label: string; children: ReactNode }) {
+function Row({
+  label,
+  hint,
+  children,
+}: {
+  label: string;
+  hint?: string;
+  children: ReactNode;
+}) {
   return (
     <div className="flex items-center justify-between gap-4 border-line border-t py-4 first:border-t-0">
-      <span className="font-medium text-sm">{label}</span>
+      <div>
+        <span className="block font-medium text-sm">{label}</span>
+        {hint && <small className="text-subtle text-xs">{hint}</small>}
+      </div>
       {children}
     </div>
   );
@@ -81,8 +92,16 @@ export function SettingsDialog({
   const titleId = useId();
   const [tab, setTab] = useState<Tab>("appearance");
   const [confirming, setConfirming] = useState(false);
-  const { theme, accent, localeSetting, setTheme, setAccent, setLocale } =
-    usePrefs();
+  const {
+    theme,
+    accent,
+    localeSetting,
+    name,
+    setTheme,
+    setAccent,
+    setLocale,
+    setName,
+  } = usePrefs();
   const deleteAll = useDeleteAllConversations();
 
   useEffect(() => {
@@ -139,7 +158,7 @@ export function SettingsDialog({
           <section className="overflow-y-auto px-6 py-4">
             {tab === "appearance" && (
               <>
-                <Row label={t("theme.label")}>
+                <Row label={t("theme.label")} hint={t("theme.hint")}>
                   <Segmented
                     label={t("theme.label")}
                     value={theme}
@@ -150,7 +169,7 @@ export function SettingsDialog({
                     onChange={setTheme}
                   />
                 </Row>
-                <Row label={t("accent.label")}>
+                <Row label={t("accent.label")} hint={t("accent.hint")}>
                   <div className="flex gap-2">
                     {swatches.map(({ id, color }) => (
                       <button
@@ -166,7 +185,7 @@ export function SettingsDialog({
                     ))}
                   </div>
                 </Row>
-                <Row label={t("language.label")}>
+                <Row label={t("language.label")} hint={t("language.hint")}>
                   <Segmented
                     label={t("language.label")}
                     value={localeSetting}
@@ -182,6 +201,25 @@ export function SettingsDialog({
                     onChange={setLocale}
                   />
                 </Row>
+                <div className="border-line border-t py-4">
+                  <label htmlFor="name" className="block font-medium text-sm">
+                    {t("name.label")}
+                  </label>
+                  <small className="text-subtle text-xs">
+                    {t("name.hint")}
+                  </small>
+                  <input
+                    id="name"
+                    defaultValue={name}
+                    maxLength={40}
+                    autoComplete="off"
+                    onBlur={(e) => setName(e.target.value)}
+                    onKeyDown={(e) =>
+                      e.key === "Enter" && e.currentTarget.blur()
+                    }
+                    className="mt-2 block h-9 w-full rounded-lg border border-line bg-bg px-3 text-sm outline-none focus:border-accent"
+                  />
+                </div>
               </>
             )}
             {tab === "data" && (

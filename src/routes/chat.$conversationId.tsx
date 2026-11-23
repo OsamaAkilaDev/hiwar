@@ -57,28 +57,45 @@ function Conversation({ conversationId }: { conversationId: string }) {
     );
   }, [streamingId, messages, t]);
 
+  const model = messages.findLast(
+    (m) => m.role === "assistant" && m.model,
+  )?.model;
+  const composer = (
+    <Composer
+      model={model ?? undefined}
+      isStreaming={isStreaming}
+      onSend={send}
+      onStop={stop}
+    />
+  );
+
   return (
     <main className="flex flex-1 flex-col">
-      <div className={`${column} flex-1 pt-7`}>
-        {messages.length === 0 ? (
-          <EmptyState onPick={send} />
-        ) : (
-          <MessageList
-            messages={messages}
-            streamingId={streamingId}
-            settled={settled}
-            onRetry={retry}
-          />
-        )}
-      </div>
       <div aria-live="polite" className="sr-only">
         {announcement}
       </div>
-      <div className="sticky bottom-0 bg-linear-to-t from-bg from-60% to-transparent pt-6 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
-        <div className={column}>
-          <Composer isStreaming={isStreaming} onSend={send} onStop={stop} />
+      {messages.length === 0 ? (
+        <div
+          className={`${column} flex flex-1 flex-col gap-6 pt-[22vh] lg:pt-[30vh]`}
+        >
+          <EmptyState />
+          {composer}
         </div>
-      </div>
+      ) : (
+        <>
+          <div className={`${column} flex-1 pt-7`}>
+            <MessageList
+              messages={messages}
+              streamingId={streamingId}
+              settled={settled}
+              onRetry={retry}
+            />
+          </div>
+          <div className="sticky bottom-0 bg-linear-to-t from-bg from-60% to-transparent pt-6 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
+            <div className={column}>{composer}</div>
+          </div>
+        </>
+      )}
     </main>
   );
 }

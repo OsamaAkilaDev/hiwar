@@ -1,15 +1,15 @@
 import {
-  GearSixIcon,
   MagnifyingGlassIcon,
-  PlusIcon,
+  NotePencilIcon,
   SidebarSimpleIcon,
 } from "@phosphor-icons/react";
 import { Link, useNavigate, useParams } from "@tanstack/react-router";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import type { ConversationDTO } from "../../../../shared/events";
 import { ConfirmDialog } from "../../../components/ConfirmDialog";
 import { Mark } from "../../../components/Mark";
 import { useT } from "../../../i18n";
+import { usePrefs } from "../../../lib/prefs";
 import { groupConversations } from "../groups";
 import { useConversations } from "../hooks/useConversations";
 import { useDeleteConversation } from "../hooks/useDeleteConversation";
@@ -23,10 +23,11 @@ type Props = {
   onOpenSettings: () => void;
 };
 
-const modKey = /Mac|iPhone|iPad/.test(navigator.userAgent) ? "⌘" : "Ctrl";
-
 const iconButton =
   "grid size-8.5 shrink-0 place-items-center rounded-[0.65rem] text-muted transition-colors hover:bg-surface-2 hover:text-fg";
+
+const row =
+  "flex h-9 w-full items-center gap-2.5 rounded-lg px-3 text-start text-sm transition-colors hover:bg-surface-2";
 
 export function Sidebar({ onNavigate, onCollapse, onOpenSettings }: Props) {
   const t = useT();
@@ -44,13 +45,16 @@ export function Sidebar({ onNavigate, onCollapse, onOpenSettings }: Props) {
   const [target, setTarget] = useState<ConversationDTO>();
   const [confirming, setConfirming] = useState(false);
   const [query, setQuery] = useState("");
-  const search = useRef<HTMLInputElement>(null);
+  const [searching, setSearching] = useState(false);
+  const locale = usePrefs((s) => s.locale);
+  const name = usePrefs((s) => s.name);
+  const label = name || t("you");
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key.toLowerCase() !== "k" || !(e.metaKey || e.ctrlKey)) return;
       e.preventDefault();
-      search.current?.focus();
+      setSearching(true);
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
@@ -70,17 +74,17 @@ export function Sidebar({ onNavigate, onCollapse, onOpenSettings }: Props) {
 
   return (
     <div className="flex h-full flex-col pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]">
-      <div className="flex items-center gap-2.5 px-4.5 pt-4.5 pb-3.5">
-        <Mark className="size-8 shrink-0" />
-        <div className="font-bold font-display text-[1.2rem] leading-none tracking-[-0.03em]">
-          hiwar
-          <small
-            lang="ar"
-            className="mt-1 block font-kufi font-medium text-[0.7rem] text-subtle tracking-normal"
-          >
+      <div className="flex items-center gap-2.5 px-4.5 pt-4.5 pb-3">
+        <Mark className="size-7 shrink-0" />
+        {locale === "ar" ? (
+          <span className="font-bold font-kufi text-[1.15rem] leading-none">
             حوار
-          </small>
-        </div>
+          </span>
+        ) : (
+          <span className="font-bold font-display text-[1.2rem] leading-none tracking-[-0.03em]">
+            hiwar
+          </span>
+        )}
         {onCollapse && (
           <button
             type="button"
@@ -96,34 +100,44 @@ export function Sidebar({ onNavigate, onCollapse, onOpenSettings }: Props) {
           </button>
         )}
       </div>
-      <Link
-        to="/"
-        onClick={onNavigate}
-        className="mx-3 mt-1 mb-2.5 flex h-11 items-center justify-center gap-2 rounded-xl bg-accent font-semibold text-accent-ink text-sm transition-[transform,filter] hover:brightness-105 active:scale-[0.98]"
-      >
-        <PlusIcon weight="bold" className="size-4.5" aria-hidden />
-        {t("newChat")}
-      </Link>
-      <div className="mx-3 flex h-9 items-center gap-2 rounded-[0.65rem] border border-line bg-surface px-3 text-subtle focus-within:border-accent">
-        <MagnifyingGlassIcon className="size-4 shrink-0" aria-hidden />
-        <input
-          ref={search}
-          type="search"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Escape" && query) {
-              e.preventDefault();
-              setQuery("");
-            }
-          }}
-          aria-label={t("searchChats")}
-          placeholder={t("searchChats")}
-          className="min-w-0 flex-1 bg-transparent text-fg text-sm outline-none placeholder:text-subtle [&::-webkit-search-cancel-button]:appearance-none"
-        />
-        <kbd className="hidden rounded-md border border-line px-1.5 font-mono text-[0.65rem] pointer-fine:block">
-          {modKey} K
-        </kbd>
+      <div className="flex flex-col gap-0.5 px-2">
+        <Link to="/" onClick={onNavigate} className={row}>
+          <NotePencilIcon className="size-4.5 shrink-0" aria-hidden />
+          {t("newChat")}
+        </Link>
+        {searching ? (
+          <div
+            className={`${row} border border-line bg-surface text-subtle focus-within:border-accent`}
+          >
+            <MagnifyingGlassIcon className="size-4.5 shrink-0" aria-hidden />
+            <input
+              // biome-ignore lint/a11y/noAutofocus: the user just asked to search
+              autoFocus
+              type="search"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              onBlur={() => !query && setSearching(false)}
+              onKeyDown={(e) => {
+                if (e.key !== "Escape") return;
+                e.preventDefault();
+                setQuery("");
+                setSearching(false);
+              }}
+              aria-label={t("searchChats")}
+              placeholder={t("searchChats")}
+              className="min-w-0 flex-1 bg-transparent text-fg outline-none placeholder:text-subtle [&::-webkit-search-cancel-button]:appearance-none"
+            />
+          </div>
+        ) : (
+          <button
+            type="button"
+            onClick={() => setSearching(true)}
+            className={row}
+          >
+            <MagnifyingGlassIcon className="size-4.5 shrink-0" aria-hidden />
+            {t("searchChats")}
+          </button>
+        )}
       </div>
       <nav
         aria-label={t("chats")}
@@ -141,30 +155,35 @@ export function Sidebar({ onNavigate, onCollapse, onOpenSettings }: Props) {
             {needle ? t("noMatches") : t("noChats")}
           </p>
         ) : (
-          groupConversations(shown).map(({ key, items }) => (
-            <section key={key}>
-              <h2 className="px-2.5 pt-4 pb-1.5 font-medium text-subtle text-xs">
-                {t(key)}
-              </h2>
-              <ul className="flex flex-col gap-0.5">
-                {items.map((conversation) => (
-                  <ConversationItem
-                    key={conversation.id}
-                    conversation={conversation}
-                    active={conversation.id === conversationId}
-                    onNavigate={onNavigate}
-                    onRename={(title) =>
-                      rename.mutate({ id: conversation.id, title })
-                    }
-                    onDelete={() => {
-                      setTarget(conversation);
-                      setConfirming(true);
-                    }}
-                  />
-                ))}
-              </ul>
-            </section>
-          ))
+          <>
+            <p className="px-3 pt-5 font-medium text-subtle text-xs">
+              {t("recents")}
+            </p>
+            {groupConversations(shown).map(({ key, items }) => (
+              <section key={key}>
+                <h2 className="px-3 pt-3 pb-1.5 font-medium text-subtle text-xs">
+                  {t(key)}
+                </h2>
+                <ul className="flex flex-col gap-0.5">
+                  {items.map((conversation) => (
+                    <ConversationItem
+                      key={conversation.id}
+                      conversation={conversation}
+                      active={conversation.id === conversationId}
+                      onNavigate={onNavigate}
+                      onRename={(title) =>
+                        rename.mutate({ id: conversation.id, title })
+                      }
+                      onDelete={() => {
+                        setTarget(conversation);
+                        setConfirming(true);
+                      }}
+                    />
+                  ))}
+                </ul>
+              </section>
+            ))}
+          </>
         )}
         {hasNextPage && !needle && (
           <button
@@ -177,15 +196,15 @@ export function Sidebar({ onNavigate, onCollapse, onOpenSettings }: Props) {
           </button>
         )}
       </nav>
-      <div className="flex items-center border-line border-t px-3 py-2.5">
-        <button
-          type="button"
-          aria-label={t("settings")}
-          title={t("settings")}
-          onClick={onOpenSettings}
-          className={`${iconButton} ms-auto`}
-        >
-          <GearSixIcon className="size-4.5" aria-hidden />
+      <div className="border-line border-t p-2">
+        <button type="button" onClick={onOpenSettings} className={row}>
+          <span
+            aria-hidden
+            className="grid size-6 shrink-0 place-items-center rounded-full bg-accent-soft font-medium text-accent-text text-xs"
+          >
+            {Array.from(label)[0]?.toUpperCase()}
+          </span>
+          <span className="truncate">{label}</span>
         </button>
       </div>
       <ConfirmDialog

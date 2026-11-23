@@ -10,12 +10,13 @@ import {
 import { useT } from "../../../i18n";
 
 type Props = {
+  model?: string;
   isStreaming: boolean;
   onSend: (text: string) => void;
   onStop: () => void;
 };
 
-export function Composer({ isStreaming, onSend, onStop }: Props) {
+export function Composer({ model, isStreaming, onSend, onStop }: Props) {
   const t = useT();
   const [text, setText] = useState("");
   const input = useRef<HTMLTextAreaElement>(null);
@@ -114,17 +115,28 @@ export function Composer({ isStreaming, onSend, onStop }: Props) {
           )}
         </div>
       </form>
-      <p className="mt-2 hidden justify-center gap-4 text-subtle text-xs pointer-fine:flex">
-        <span>
-          <Kbd>Enter</Kbd> {t("hint.send")}
-        </span>
-        <span>
-          <Kbd>Shift Enter</Kbd> {t("hint.newline")}
-        </span>
-        <span>
-          <Kbd>Esc</Kbd> {t("hint.stop")}
-        </span>
-      </p>
+      <div className="mt-2 flex items-center gap-4 text-subtle text-xs">
+        <p className="hidden gap-4 pointer-fine:flex">
+          <span>
+            <Kbd>Enter</Kbd> {t("hint.send")}
+          </span>
+          <span>
+            <Kbd>Shift Enter</Kbd> {t("hint.newline")}
+          </span>
+          <span>
+            <Kbd>Esc</Kbd> {t("hint.stop")}
+          </span>
+        </p>
+        {model && (
+          <span
+            dir="ltr"
+            title={t("model")}
+            className="ms-auto truncate font-mono"
+          >
+            {model}
+          </span>
+        )}
+      </div>
     </>
   );
 }

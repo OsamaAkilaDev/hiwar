@@ -35,9 +35,11 @@ type Prefs = {
   /** The palette on screen; differs from `theme` only for "system". */
   palette: "dark" | "light";
   accent: Accent;
+  name: string;
   setLocale: (setting: LocaleSetting) => void;
   setTheme: (theme: Theme) => void;
   setAccent: (accent: Accent) => void;
+  setName: (name: string) => void;
 };
 
 const html = document.documentElement;
@@ -62,6 +64,7 @@ export const usePrefs = create<Prefs>((set) => ({
   theme: resolveTheme(read("hiwar.theme")),
   palette: html.dataset.theme === "light" ? "light" : "dark",
   accent: resolveAccent(read("hiwar.accent")),
+  name: read("hiwar.name") ?? "",
   setLocale: (setting) => {
     persist("hiwar.locale", setting === "auto" ? null : setting);
     const locale =
@@ -82,6 +85,11 @@ export const usePrefs = create<Prefs>((set) => ({
     persist("hiwar.accent", accent);
     html.dataset.accent = accent;
     set({ accent });
+  },
+  setName: (value) => {
+    const name = value.trim().slice(0, 40);
+    persist("hiwar.name", name || null);
+    set({ name });
   },
 }));
 
