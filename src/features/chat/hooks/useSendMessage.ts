@@ -1,7 +1,7 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import type { MessageDTO } from "../../../../shared/events";
-import { streamChat } from "../../../lib/api";
+import { HttpError, streamChat } from "../../../lib/api";
 import { newId } from "../../../lib/ids";
 import { queryKeys } from "../../../lib/query-keys";
 import { useChatStore } from "../store";
@@ -16,10 +16,17 @@ const assistantRow = (conversationId: string): MessageDTO => ({
   createdAt: new Date().toISOString(),
 });
 
-const interrupted = (signal: AbortSignal): Partial<MessageDTO> =>
-  signal.aborted
-    ? { status: "stopped" }
-    : { status: "error", error: "Connection lost.", retryable: true };
+const interrupted = (
+  signal: AbortSignal,
+  cause?: unknown,
+): Partial<MessageDTO> => {
+  if (signal.aborted) return { status: "stopped" };
+  const error =
+    cause instanceof HttpError && cause.status === 429
+      ? "Too many messages. Wait a minute and try again."
+      : "Connection lost.";
+  return { status: "error", error, retryable: true };
+};
 
 export function useSendMessage(conversationId: string) {
   const queryClient = useQueryClient();
@@ -77,8 +84,8 @@ export function useSendMessage(conversationId: string) {
         }
       }
       if (!ended) settle(interrupted(abort.signal));
-    } catch {
-      settle(interrupted(abort.signal));
+    } catch (cause) {
+      settle(interrupted(abort.signal, cause));
     } finally {
       controller.current = null;
       setStreamingId(null);

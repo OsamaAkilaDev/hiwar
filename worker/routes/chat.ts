@@ -17,8 +17,14 @@ type Payload<E = StreamEvent> = E extends unknown
   ? Omit<E, "messageId" | "seq">
   : never;
 
+// Per-IP limit so a public URL can't drain the free model quota.
 export const chat = new Hono<{ Bindings: Env }>().post(
   "/chat/stream",
+  async (c, next) => {
+    const key = c.req.header("cf-connecting-ip") ?? "local";
+    const { success } = await c.env.CHAT_LIMITER.limit({ key });
+    return success ? next() : c.json({ error: "rate_limited" }, 429);
+  },
   async (c) => {
     const parsed = ChatStreamRequest.safeParse(
       await c.req.json().catch(() => null),

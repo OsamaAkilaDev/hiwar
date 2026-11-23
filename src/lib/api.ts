@@ -18,6 +18,12 @@ export async function getMessages(
   return ((await res.json()) as { messages: MessageDTO[] }).messages;
 }
 
+export class HttpError extends Error {
+  constructor(readonly status: number) {
+    super(`request failed: ${status}`);
+  }
+}
+
 export async function* streamChat(
   req: ChatStreamRequest,
   signal: AbortSignal,
@@ -28,8 +34,6 @@ export async function* streamChat(
     body: JSON.stringify(req),
     signal,
   });
-  if (!res.ok || !res.body) {
-    throw new Error(`chat request failed: ${res.status}`);
-  }
+  if (!res.ok || !res.body) throw new HttpError(res.status);
   yield* parseEventStream(res.body);
 }
