@@ -9,6 +9,7 @@
     "typecheck": "tsc -b",
     "lint": "biome check .",
     "test": "bun test --pass-with-no-tests",
+    "check": "biome check . && tsc -b && bun test --pass-with-no-tests && vite build",
     "deploy": "vite build && wrangler deploy",
     "cf-typegen": "wrangler types",
     "postinstall": "wrangler types"

@@ -6,7 +6,7 @@
 
 **Architecture:** One Vite project built with `@cloudflare/vite-plugin`: `src/` is the React SPA, `worker/` is the Hono API on `/api/*`, `shared/` holds Zod contracts both import. One Worker deploy serves both. Postgres (Neon) through Hyperdrive via Drizzle.
 
-**Tech Stack:** Vite, React 19, TypeScript, TanStack Router/Query, Zustand, Tailwind v4, Hono, Zod, Drizzle + `postgres`, `openai` SDK, `uuid` (v7), `react-markdown` + `remark-gfm` + `marked` (lexer only). Bun = package manager + script runner + test runner (`bun test`). Runtime is still workerd (Workers), not Bun. GitHub Actions for CI/CD.
+**Tech Stack:** Vite, React 19, TypeScript, TanStack Router/Query, Zustand, Tailwind v4, Hono, Zod, Drizzle + `postgres`, `openai` SDK, `uuid` (v7), `react-markdown` + `remark-gfm` + `marked` (lexer only). Bun = package manager + script runner + test runner (`bun test`). Runtime is still workerd (Workers), not Bun. Cloudflare Workers Builds (dashboard Git integration) for CI/CD.
 
 **Spec:** `docs/architecture.md` + `docs/superpowers/specs/2026-11-23-bilingual-chat-design.md`
 
@@ -21,7 +21,7 @@
 - Neon project with a `dev` branch → `DATABASE_URL` (pooled off).
 - Gemini API key from Google AI Studio → `GEMINI_API_KEY`.
 - Both go in `.dev.vars` (git-ignored).
-- Bun installed. Cloudflare account + API token (Workers edit) → GitHub secrets `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`.
+- Bun installed. Worker connected to the GitHub repo in the Cloudflare dashboard (Workers Builds): build command `bun run check`, deploy command `bunx wrangler deploy`.
 - Production secrets via `wrangler secret put GEMINI_API_KEY`; Hyperdrive config created in Task 3 (`wrangler hyperdrive create`).
 
 ## Global Constraints
@@ -34,7 +34,7 @@
 - Markdown: no raw HTML (no `rehype-raw`), default `urlTransform`.
 - Default provider in dev: `mock` (`LLM_PROVIDERS=mock` in `.dev.vars`).
 - Commits: short human messages, no AI attribution.
-- Every push to `main` deploys only if typecheck + tests pass.
+- Every push to `main` deploys only if `bun run check` (lint + typecheck + tests + build) passes; other branches get preview builds.
 
 ## Review Focus
 
@@ -48,9 +48,8 @@
 
 ### Task 1: Scaffold the Worker + SPA, GitHub, CI/CD
 
-**Files:** Create `package.json`, `vite.config.ts`, `wrangler.jsonc`, `tsconfig.json`, `index.html`, `src/main.tsx`, `src/styles/app.css`, `worker/index.ts`, `.gitignore`, `.dev.vars.example`, `.github/workflows/ci.yml`.
+**Files:** Create `package.json`, `vite.config.ts`, `wrangler.jsonc`, `tsconfig.json`, `index.html`, `src/main.tsx`, `src/styles/app.css`, `worker/index.ts`, `.gitignore`, `.dev.vars.example`, `.gitattributes`, `biome.json`.
 
-CI (`ci.yml`): on PR and push to `main` → `oven-sh/setup-bun` → `bun install --frozen-lockfile` → `bun run typecheck` → `bun test` → `bun run build`. Job `deploy` (`needs: check`, only on push to `main`) → `cloudflare/wrangler-action` `deploy`.
 
 **Interfaces:**
 
@@ -59,7 +58,7 @@ CI (`ci.yml`): on PR and push to `main` → `oven-sh/setup-bun` → `bun install
 - [ ] **Step 1:** `git init`; scaffold with `bun create cloudflare@latest . --framework=react` (Vite + Worker template), then add Hono, Tailwind v4 (`@tailwindcss/vite`), TanStack Router plugin.
 - [ ] **Step 2:** `GET /api/health` → `{ ok: true }`.
 - [ ] **Step 3:** Run `bun dev`; `curl localhost:5173/api/health` → `{"ok":true}`; `/` serves the SPA; `/anything` serves the SPA (fallback).
-- [ ] **Step 4:** Commit `scaffold worker and spa`; `gh repo create` (public), push; add the two Cloudflare secrets; confirm the Actions run deploys and `https://<worker>.workers.dev/api/health` returns `{"ok":true}`.
+- [ ] **Step 4:** Commit `scaffold worker and spa`; `gh repo create` (public), push; connect the repo in the Cloudflare dashboard (Workers Builds); confirm the build deploys and `https://<worker>.workers.dev/api/health` returns `{"ok":true}`.
 
 ### Task 2: SSE contract + codec
 
