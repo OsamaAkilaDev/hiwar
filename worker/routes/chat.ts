@@ -1,6 +1,7 @@
 import { Hono } from "hono";
 import { streamSSE } from "hono/streaming";
 import { ChatStreamRequest, type StreamEvent } from "../../shared/events";
+import { langOf } from "../../shared/lang";
 import { encodeEvent } from "../../shared/sse";
 import { db } from "../db/client";
 import { getConversation, setConversationTitle } from "../db/conversations";
@@ -54,7 +55,7 @@ export const chat = new Hono<{ Bindings: Env }>().post(
         conversationId,
         id: userMessageId,
         text,
-        lang: /[؀-ۿ]/.test(text) ? "ar" : "en",
+        lang: langOf(text),
       });
       if (!found) return c.json({ error: "not_found" }, 404);
     } catch (error) {
