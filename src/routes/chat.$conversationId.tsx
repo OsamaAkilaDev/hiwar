@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useEffect, useRef, useState } from "react";
 import { Composer } from "../features/chat/components/Composer";
 import { MessageList } from "../features/chat/components/MessageList";
 import { useConversation } from "../features/chat/hooks/useConversation";
@@ -16,12 +17,24 @@ export const Route = createFileRoute("/chat/$conversationId")({
   component: ChatScreen,
 });
 
-const column = "mx-auto w-full max-w-[44rem] px-4";
+const column = "mx-auto w-full max-w-[38rem] px-4";
 
 function ChatScreen() {
   const { conversationId } = Route.useParams();
   const { data: messages = [] } = useConversation(conversationId);
-  const { send, retry, stop, isStreaming } = useSendMessage(conversationId);
+  const { send, retry, stop, streamingId, isStreaming } =
+    useSendMessage(conversationId);
+  const [announcement, setAnnouncement] = useState("");
+  const watching = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (streamingId) watching.current = streamingId;
+    const done = messages.find((m) => m.id === watching.current);
+    if (streamingId || !done || done.status === "streaming") return;
+    watching.current = null;
+    if (done.status === "complete") setAnnouncement(done.content.slice(0, 600));
+  }, [streamingId, messages]);
+
   const composer = (
     <Composer isStreaming={isStreaming} onSend={send} onStop={stop} />
   );
@@ -42,7 +55,14 @@ function ChatScreen() {
   return (
     <main className="flex flex-1 flex-col">
       <div className={`${column} flex-1 pt-4`}>
-        <MessageList messages={messages} onRetry={retry} />
+        <MessageList
+          messages={messages}
+          streamingId={streamingId}
+          onRetry={retry}
+        />
+      </div>
+      <div aria-live="polite" className="sr-only">
+        {announcement}
       </div>
       <div className="sticky bottom-0 bg-bg pb-4">
         <div className={column}>{composer}</div>

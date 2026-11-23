@@ -2,11 +2,11 @@ import { marked } from "marked";
 import { memo, useMemo } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { dirOf } from "../../../lib/dir";
+import { dirProps } from "../../../lib/dir";
 
 const Block = memo(function Block({ source }: { source: string }) {
   return (
-    <div dir={dirOf(source)}>
+    <div {...dirProps(source)}>
       <ReactMarkdown remarkPlugins={[remarkGfm]}>{source}</ReactMarkdown>
     </div>
   );

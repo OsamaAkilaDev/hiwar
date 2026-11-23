@@ -1,5 +1,12 @@
 import { ArrowUp, Square } from "lucide-react";
-import { type FormEvent, type KeyboardEvent, useRef, useState } from "react";
+import {
+  type FormEvent,
+  type KeyboardEvent,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 
 type Props = {
   isStreaming: boolean;
@@ -11,6 +18,35 @@ export function Composer({ isStreaming, onSend, onStop }: Props) {
   const [text, setText] = useState("");
   const input = useRef<HTMLTextAreaElement>(null);
   const canSend = text.trim().length > 0 && !isStreaming;
+
+  const wasStreaming = useRef(false);
+
+  // biome-ignore lint/correctness/useExhaustiveDependencies: resize whenever the text changes
+  useLayoutEffect(() => {
+    const el = input.current;
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = `${el.scrollHeight}px`;
+  }, [text]);
+
+  useEffect(() => {
+    if (
+      wasStreaming.current &&
+      !isStreaming &&
+      document.activeElement === document.body
+    )
+      input.current?.focus();
+    wasStreaming.current = isStreaming;
+  }, [isStreaming]);
+
+  useEffect(() => {
+    if (!isStreaming) return;
+    const onEscape = (e: globalThis.KeyboardEvent) => {
+      if (e.key === "Escape") onStop();
+    };
+    window.addEventListener("keydown", onEscape);
+    return () => window.removeEventListener("keydown", onEscape);
+  }, [isStreaming, onStop]);
 
   const submit = (e?: FormEvent) => {
     e?.preventDefault();
@@ -45,13 +81,14 @@ export function Composer({ isStreaming, onSend, onStop }: Props) {
         onChange={(e) => setText(e.target.value)}
         onKeyDown={onKeyDown}
         placeholder="Message Hiwar"
-        className="field-sizing-content max-h-52 min-h-10 flex-1 resize-none bg-transparent px-2 py-2 leading-relaxed outline-none placeholder:text-fg-subtle"
+        className="max-h-52 min-h-10 overflow-y-auto flex-1 resize-none bg-transparent px-2 py-2 leading-relaxed outline-none placeholder:text-fg-subtle"
       />
       {isStreaming ? (
         <button
           type="button"
           onClick={onStop}
           aria-label="Stop"
+          aria-keyshortcuts="Escape"
           className="grid size-9 shrink-0 place-items-center rounded-lg bg-fg text-bg transition-opacity hover:opacity-85"
         >
           <Square className="size-3.5" fill="currentColor" aria-hidden />

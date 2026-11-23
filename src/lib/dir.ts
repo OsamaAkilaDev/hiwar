@@ -7,3 +7,8 @@ export const dirOf = (text: string): "rtl" | "ltr" =>
   (text.match(ARABIC)?.length ?? 0) > (text.match(LATIN)?.length ?? 0)
     ? "rtl"
     : "ltr";
+
+export const dirProps = (text: string) => {
+  const dir = dirOf(text);
+  return dir === "rtl" ? { dir, lang: "ar" } : { dir };
+};

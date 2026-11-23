@@ -1,13 +1,17 @@
-import { useEffect, useRef } from "react";
-import type { MessageDTO } from "../../../../shared/events";
+import { Fragment, useEffect, useRef } from "react";
 import { useChatStore } from "../store";
-import { MessageRow } from "./MessageRow";
+import type { ChatRow } from "../types";
+import { MessageRow, NoResponse } from "./MessageRow";
 
-type Props = { messages: MessageDTO[]; onRetry: (id: string) => void };
+type Props = {
+  messages: ChatRow[];
+  streamingId: string | null;
+  onRetry: (userMessageId: string) => void;
+};
 
 const NEAR_BOTTOM_PX = 120;
 
-export function MessageList({ messages, onRetry }: Props) {
+export function MessageList({ messages, streamingId, onRetry }: Props) {
   const end = useRef<HTMLDivElement>(null);
   const pinned = useRef(true);
 
@@ -36,9 +40,30 @@ export function MessageList({ messages, onRetry }: Props) {
 
   return (
     <div className="flex flex-col gap-7 pb-6">
-      {messages.map((m) => (
-        <MessageRow key={m.id} message={m} onRetry={onRetry} />
-      ))}
+      {messages.map((m, i) => {
+        if (m.role === "assistant") {
+          const userId = messages[i - 1]?.id ?? "";
+          return (
+            <MessageRow
+              key={m.id}
+              message={m}
+              live={m.id === streamingId}
+              onRetry={() => onRetry(userId)}
+            />
+          );
+        }
+        const unanswered = messages[i + 1]?.role !== "assistant";
+        return (
+          <Fragment key={m.id}>
+            <MessageRow message={m} live={false} />
+            {unanswered && streamingId === null ? (
+              <div className="-mt-5">
+                <NoResponse onRetry={() => onRetry(m.id)} />
+              </div>
+            ) : null}
+          </Fragment>
+        );
+      })}
       <div ref={end} className="scroll-mb-28" />
     </div>
   );

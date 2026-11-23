@@ -1,14 +1,15 @@
 import { RotateCcw } from "lucide-react";
-import { memo } from "react";
-import type { MessageDTO } from "../../../../shared/events";
-import { dirOf } from "../../../lib/dir";
+import { memo, type ReactNode } from "react";
+import { dirProps } from "../../../lib/dir";
 import { useChatStore } from "../store";
+import type { ChatRow } from "../types";
 import { Markdown } from "./Markdown";
 
-type Props = { message: MessageDTO; onRetry: (id: string) => void };
+type Props = { message: ChatRow; live: boolean; onRetry?: () => void };
 
 export const MessageRow = memo(function MessageRow({
   message,
+  live,
   onRetry,
 }: Props) {
   const streamed = useChatStore((s) => s.streams[message.id]?.text);
@@ -18,7 +19,7 @@ export const MessageRow = memo(function MessageRow({
     return (
       <div className="flex justify-end">
         <div
-          dir={dirOf(message.content)}
+          {...dirProps(message.content)}
           className="max-w-[85%] whitespace-pre-wrap break-words rounded-[18px] bg-surface-2 px-4 py-2.5 leading-relaxed"
         >
           {message.content}
@@ -27,29 +28,58 @@ export const MessageRow = memo(function MessageRow({
     );
   }
 
+  const { status } = message;
+  const stopped = status === "stopped" || (status === "streaming" && !live);
+  const empty = status === "complete" && !text;
+
   return (
     <div className="group">
       {text ? <Markdown text={text} /> : null}
-      {message.status === "streaming" && !text ? <Thinking /> : null}
-      {message.status === "stopped" ? (
-        <p className="mt-2 text-fg-subtle text-sm">Stopped</p>
-      ) : null}
-      {message.status === "error" ? (
-        <div className="mt-2 flex items-center gap-3 text-sm">
-          <span className="text-danger">The response failed.</span>
-          <button
-            type="button"
-            onClick={() => onRetry(message.id)}
-            className="inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-accent transition-colors hover:bg-surface-2"
-          >
-            <RotateCcw className="size-3.5 rtl:-scale-x-100" aria-hidden />
-            Retry
-          </button>
-        </div>
+      {status === "streaming" && live && !text ? <Thinking /> : null}
+      {stopped ? <Note>Stopped</Note> : null}
+      {empty ? <NoResponse onRetry={onRetry} /> : null}
+      {status === "error" ? (
+        <Note tone="danger">
+          {message.error ?? "This reply didn't finish."}
+          {message.retryable === false ? null : (
+            <RetryButton onRetry={onRetry} />
+          )}
+        </Note>
       ) : null}
     </div>
   );
 });
+
+export const NoResponse = ({ onRetry }: { onRetry?: () => void }) => (
+  <Note>
+    No response.
+    <RetryButton onRetry={onRetry} />
+  </Note>
+);
+
+function Note({ tone, children }: { tone?: "danger"; children: ReactNode }) {
+  return (
+    <p
+      role="status"
+      className={`mt-2 flex items-center gap-3 text-sm ${tone === "danger" ? "text-danger" : "text-fg-subtle"}`}
+    >
+      {children}
+    </p>
+  );
+}
+
+function RetryButton({ onRetry }: { onRetry?: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onRetry}
+      className="inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-accent transition-colors hover:bg-surface-2"
+    >
+      <RotateCcw className="size-3.5 rtl:-scale-x-100" aria-hidden />
+      Retry
+    </button>
+  );
+}
 
 function Thinking() {
   return (

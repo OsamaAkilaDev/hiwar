@@ -15,7 +15,7 @@ export const Route = createRootRouteWithContext<{
 function Root() {
   return (
     <div className="flex min-h-dvh flex-col">
-      <header className="sticky top-0 z-10 flex h-14 items-center justify-between bg-bg/85 px-4 backdrop-blur-md">
+      <header className="sticky top-0 z-10 flex h-14 items-center justify-between bg-bg px-4">
         <span className="font-semibold tracking-tight">Hiwar</span>
         <Link
           to="/"

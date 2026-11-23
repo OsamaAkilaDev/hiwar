@@ -75,7 +75,7 @@ export const chat = new Hono<{ Bindings: Env }>().post(
         console.error("chat.stream context failed", error);
         await send({
           type: "error",
-          message: "The response failed. Please try again.",
+          message: "Something went wrong on our side. Try again.",
           retryable: true,
         });
         return;
@@ -121,7 +121,10 @@ export const chat = new Hono<{ Bindings: Env }>().post(
             ? { type: "done", message }
             : {
                 type: "error",
-                message: "The response failed. Please try again.",
+                message:
+                  ttftMs === undefined
+                    ? "No model is available right now. Try again in a moment."
+                    : "The reply was cut off.",
                 retryable: true,
               },
         );
