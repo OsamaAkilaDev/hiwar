@@ -1,3 +1,4 @@
+import { titlePrompt } from "../prompts/title";
 import type { ChatMessage, Provider } from "../types";
 
 const CHUNK_SIZE = 8;
@@ -40,6 +41,12 @@ export function mockProvider(): Provider {
     model: "mock",
     async *stream(messages: ChatMessage[], signal: AbortSignal) {
       const last = messages.findLast((m) => m.role === "user")?.content;
+      if (messages[0]?.content === titlePrompt()) {
+        yield /[؀-ۿ]/.test(last ?? "")
+          ? "شرح أساسيات React"
+          : "Explaining React basics";
+        return;
+      }
       if (last === "/fail") throw new Error("mock failure");
       if (last === "/slow") await sleep(SLOW_DELAY_MS, signal);
 

@@ -3,6 +3,7 @@ import { streamSSE } from "hono/streaming";
 import { ChatStreamRequest, type StreamEvent } from "../../shared/events";
 import { encodeEvent } from "../../shared/sse";
 import { db } from "../db/client";
+import { getConversation, setConversationTitle } from "../db/conversations";
 import {
   getMessage,
   insertUserMessage,
@@ -12,7 +13,10 @@ import {
 import { SEED_USER_ID } from "../db/schema";
 import { providersFromEnv, streamChat } from "../llm/gateway";
 import { systemPrompt } from "../llm/prompts/system";
+import { generateTitle } from "../llm/title";
 import type { ChatMessage, Provider } from "../llm/types";
+
+const TITLE_TIMEOUT_MS = 5000;
 
 type Payload<E = StreamEvent> = E extends unknown
   ? Omit<E, "messageId" | "seq">
@@ -75,15 +79,20 @@ export const chat = new Hono<{ Bindings: Env }>().post(
         await send({ type: "start" });
 
         let history: ChatMessage[];
+        let wantsTitle = false;
         try {
-          const [existing, recent] = await Promise.all([
+          const [existing, recent, conversation] = await Promise.all([
             getMessage(database, userId, assistantMessageId),
             recentMessages(database, userId, conversationId),
+            getConversation(database, userId, conversationId),
           ]);
           if (existing) {
             await send({ type: "done", message: existing });
             return;
           }
+          wantsTitle =
+            !conversation?.title &&
+            recent.filter((m) => m.role === "user").length === 1;
           history = recent
             .filter(
               (m) =>
@@ -101,6 +110,11 @@ export const chat = new Hono<{ Bindings: Env }>().post(
         }
 
         const providers = providersFromEnv(c.env);
+        const titleAbort = new AbortController();
+        const title = wantsTitle
+          ? generateTitle(providers, text, titleAbort.signal)
+          : null;
+
         let content = "";
         let provider: Provider | undefined;
         let ttftMs: number | undefined;
@@ -152,6 +166,28 @@ export const chat = new Hono<{ Bindings: Env }>().post(
           await send(
             error ? { type: "error", ...error } : { type: "done", message },
           );
+        }
+
+        if (title) {
+          const timer = setTimeout(() => titleAbort.abort(), TITLE_TIMEOUT_MS);
+          try {
+            const generated = await title;
+            if (generated) {
+              await setConversationTitle(
+                database,
+                userId,
+                conversationId,
+                generated,
+              );
+              if (status !== "stopped") {
+                await send({ type: "title", title: generated });
+              }
+            }
+          } catch (error) {
+            console.error("chat.title save failed", error);
+          } finally {
+            clearTimeout(timer);
+          }
         }
 
         console.log(
