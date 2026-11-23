@@ -1,4 +1,4 @@
-import { and, desc, eq, exists, lt, sql } from "drizzle-orm";
+import { and, asc, desc, eq, exists, gt, lt, sql } from "drizzle-orm";
 import type { ErrorCode, MessageDTO } from "../../shared/events";
 import type { DB } from "./client";
 import { conversations, messages } from "./schema";
@@ -152,4 +152,24 @@ export async function getMessage(
     .from(messages)
     .where(and(eq(messages.id, id), ownedBy(db, userId)));
   return row && toDTO(row);
+}
+
+export async function userMessagesAfter(
+  db: DB,
+  userId: string,
+  conversationId: string,
+  after: string | null,
+): Promise<{ id: string; content: string }[]> {
+  return db
+    .select({ id: messages.id, content: messages.content })
+    .from(messages)
+    .where(
+      and(
+        eq(messages.conversationId, conversationId),
+        eq(messages.role, "user"),
+        ownedBy(db, userId),
+        after ? gt(messages.id, after) : undefined,
+      ),
+    )
+    .orderBy(asc(messages.id));
 }

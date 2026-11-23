@@ -15,6 +15,7 @@ import { providersFromEnv, streamChat } from "../llm/gateway";
 import { systemPrompt } from "../llm/prompts/system";
 import { generateTitle } from "../llm/title";
 import type { ChatMessage, Provider } from "../llm/types";
+import { extractMemories } from "../memory/extract";
 import { type Context, contextFor, touch } from "../memory/retrieve";
 
 const TITLE_TIMEOUT_MS = 5000;
@@ -214,6 +215,12 @@ export const chat = new Hono<{ Bindings: Env }>().post(
           } finally {
             clearTimeout(timer);
           }
+        }
+
+        if (memory && !(failed && ttftMs === undefined)) {
+          c.executionCtx.waitUntil(
+            extractMemories(database, c.env, providers, userId, conversationId),
+          );
         }
 
         console.log(

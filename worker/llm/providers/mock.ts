@@ -1,3 +1,4 @@
+import { extractPrompt } from "../prompts/extract-memory";
 import { titlePrompt } from "../prompts/title";
 import type { ChatMessage, Provider } from "../types";
 
@@ -20,6 +21,10 @@ function Counter() {
 }
 \`\`\`
 `;
+
+const EXTRACTION = `\`\`\`json
+{"facts":[{"key":"preferred_language","value":"TypeScript"}],"memories":[{"content":"Prefers TypeScript examples over JavaScript.","importance":0.7}]}
+\`\`\``;
 
 function sleep(ms: number, signal: AbortSignal): Promise<void> {
   return new Promise((resolve) => {
@@ -45,6 +50,10 @@ export function mockProvider(): Provider {
         yield /[؀-ۿ]/.test(last ?? "")
           ? "شرح أساسيات React"
           : "Explaining React basics";
+        return;
+      }
+      if (messages[0]?.content === extractPrompt()) {
+        yield EXTRACTION;
         return;
       }
       if (last === "/fail") throw new Error("mock failure");

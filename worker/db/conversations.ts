@@ -81,3 +81,27 @@ export async function deleteAllConversations(db: DB, userId: string) {
 }
 
 export const setConversationTitle = renameConversation;
+
+export async function getMemoryCursor(
+  db: DB,
+  userId: string,
+  id: string,
+): Promise<string | null> {
+  const [row] = await db
+    .select({ cursor: conversations.memoryCursor })
+    .from(conversations)
+    .where(and(eq(conversations.id, id), eq(conversations.userId, userId)));
+  return row?.cursor ?? null;
+}
+
+export async function setMemoryCursor(
+  db: DB,
+  userId: string,
+  id: string,
+  cursor: string,
+) {
+  await db
+    .update(conversations)
+    .set({ memoryCursor: cursor })
+    .where(and(eq(conversations.id, id), eq(conversations.userId, userId)));
+}

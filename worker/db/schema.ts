@@ -40,6 +40,7 @@ export const conversations = pgTable(
       .notNull()
       .references(() => users.id),
     title: text(),
+    memoryCursor: uuid(),
     lastMessageAt: timestamp({ withTimezone: true, precision: 3 })
       .notNull()
       .defaultNow(),
