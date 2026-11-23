@@ -20,7 +20,7 @@ export const messageStatus = pgEnum("message_status", [
 ]);
 
 const createdAt = () =>
-  timestamp({ withTimezone: true }).notNull().defaultNow();
+  timestamp({ withTimezone: true, precision: 3 }).notNull().defaultNow();
 
 export const users = pgTable("users", {
   id: uuid().primaryKey().defaultRandom(),
@@ -36,7 +36,9 @@ export const conversations = pgTable(
       .notNull()
       .references(() => users.id),
     title: text(),
-    lastMessageAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+    lastMessageAt: timestamp({ withTimezone: true, precision: 3 })
+      .notNull()
+      .defaultNow(),
     createdAt: createdAt(),
   },
   (t) => [index().on(t.userId, t.lastMessageAt.desc())],

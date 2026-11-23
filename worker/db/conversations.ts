@@ -11,9 +11,9 @@ const toDTO = (row: Row): ConversationDTO => ({
   lastMessageAt: row.lastMessageAt.toISOString(),
 });
 
-// JS dates carry milliseconds and Postgres microseconds, so keyset paging
-// compares and orders on the truncated value to match the cursor exactly.
-const sortKey = sql`date_trunc('milliseconds', ${conversations.lastMessageAt})`;
+// Timestamps are stored at millisecond precision (matching JS dates), so the
+// cursor compares exactly and the (user_id, last_message_at) index serves the sort.
+const sortKey = conversations.lastMessageAt;
 
 export async function listConversations(
   db: DB,
