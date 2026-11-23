@@ -48,7 +48,7 @@ export async function insertUserMessage(
     on conflict do nothing
     returning id
   `);
-  return { inserted: rows.length > 0 };
+  return { inserted: rows.rowCount === 1 };
 }
 
 export async function recentMessages(
