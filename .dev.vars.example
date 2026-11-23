@@ -1,0 +1,2 @@
+# Copy to .dev.vars (git-ignored). Local dev only; production uses `wrangler secret put`.
+LLM_PROVIDERS=mock
