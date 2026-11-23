@@ -1,5 +1,5 @@
 {
-  "id": "ebfd24ad-cb20-4038-b0fe-0e1935c36803",
+  "id": "f4ee43c9-8c4d-48ec-8a06-9344d1fe990a",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -14,8 +14,8 @@
           "primaryKey": true,
           "notNull": true
         },
-        "userId": {
-          "name": "userId",
+        "user_id": {
+          "name": "user_id",
           "type": "uuid",
           "primaryKey": false,
           "notNull": true
@@ -26,15 +26,15 @@
           "primaryKey": false,
           "notNull": false
         },
-        "lastMessageAt": {
-          "name": "lastMessageAt",
+        "last_message_at": {
+          "name": "last_message_at",
           "type": "timestamp with time zone",
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
         },
-        "createdAt": {
-          "name": "createdAt",
+        "created_at": {
+          "name": "created_at",
           "type": "timestamp with time zone",
           "primaryKey": false,
           "notNull": true,
@@ -42,17 +42,17 @@
         }
       },
       "indexes": {
-        "conversations_userId_lastMessageAt_index": {
-          "name": "conversations_userId_lastMessageAt_index",
+        "conversations_user_id_last_message_at_index": {
+          "name": "conversations_user_id_last_message_at_index",
           "columns": [
             {
-              "expression": "userId",
+              "expression": "user_id",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
             },
             {
-              "expression": "lastMessageAt",
+              "expression": "last_message_at",
               "isExpression": false,
               "asc": false,
               "nulls": "last"
@@ -65,11 +65,11 @@
         }
       },
       "foreignKeys": {
-        "conversations_userId_users_id_fk": {
-          "name": "conversations_userId_users_id_fk",
+        "conversations_user_id_users_id_fk": {
+          "name": "conversations_user_id_users_id_fk",
           "tableFrom": "conversations",
           "tableTo": "users",
-          "columnsFrom": ["userId"],
+          "columnsFrom": ["user_id"],
           "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
@@ -91,8 +91,8 @@
           "primaryKey": true,
           "notNull": true
         },
-        "conversationId": {
-          "name": "conversationId",
+        "conversation_id": {
+          "name": "conversation_id",
           "type": "uuid",
           "primaryKey": false,
           "notNull": true
@@ -142,14 +142,14 @@
           "primaryKey": false,
           "notNull": false
         },
-        "tokenCount": {
-          "name": "tokenCount",
+        "token_count": {
+          "name": "token_count",
           "type": "integer",
           "primaryKey": false,
           "notNull": false
         },
-        "createdAt": {
-          "name": "createdAt",
+        "created_at": {
+          "name": "created_at",
           "type": "timestamp with time zone",
           "primaryKey": false,
           "notNull": true,
@@ -157,11 +157,11 @@
         }
       },
       "indexes": {
-        "messages_conversationId_id_index": {
-          "name": "messages_conversationId_id_index",
+        "messages_conversation_id_id_index": {
+          "name": "messages_conversation_id_id_index",
           "columns": [
             {
-              "expression": "conversationId",
+              "expression": "conversation_id",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
@@ -180,11 +180,11 @@
         }
       },
       "foreignKeys": {
-        "messages_conversationId_conversations_id_fk": {
-          "name": "messages_conversationId_conversations_id_fk",
+        "messages_conversation_id_conversations_id_fk": {
+          "name": "messages_conversation_id_conversations_id_fk",
           "tableFrom": "messages",
           "tableTo": "conversations",
-          "columnsFrom": ["conversationId"],
+          "columnsFrom": ["conversation_id"],
           "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
@@ -213,8 +213,8 @@
           "primaryKey": false,
           "notNull": true
         },
-        "createdAt": {
-          "name": "createdAt",
+        "created_at": {
+          "name": "created_at",
           "type": "timestamp with time zone",
           "primaryKey": false,
           "notNull": true,

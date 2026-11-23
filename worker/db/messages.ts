@@ -1,4 +1,4 @@
-import { and, desc, eq, lt } from "drizzle-orm";
+import { and, desc, eq, lt, sql } from "drizzle-orm";
 import type { MessageDTO } from "../../shared/events";
 import type { DB } from "./client";
 import { conversations, messages, SEED_USER_ID } from "./schema";
@@ -14,6 +14,7 @@ const toDTO = (row: Row): MessageDTO => ({
   createdAt: row.createdAt.toISOString(),
 });
 
+// One statement (one round trip): upsert the conversation, insert the message.
 export async function insertUserMessage(
   db: DB,
   input: {
@@ -25,25 +26,18 @@ export async function insertUserMessage(
   },
 ): Promise<{ inserted: boolean }> {
   const { conversationId, id, text, lang, userId = SEED_USER_ID } = input;
-  return db.transaction(async (tx) => {
-    await tx
-      .insert(conversations)
-      .values({ id: conversationId, userId })
-      .onConflictDoNothing();
-    const rows = await tx
-      .insert(messages)
-      .values({
-        id,
-        conversationId,
-        role: "user",
-        content: text,
-        status: "complete",
-        lang,
-      })
-      .onConflictDoNothing()
-      .returning({ id: messages.id });
-    return { inserted: rows.length > 0 };
-  });
+  const rows = await db.execute(sql`
+    with conversation as (
+      insert into ${conversations} (id, user_id)
+      values (${conversationId}, ${userId})
+      on conflict do nothing
+    )
+    insert into ${messages} (id, conversation_id, role, content, status, lang)
+    values (${id}, ${conversationId}, 'user', ${text}, 'complete', ${lang})
+    on conflict do nothing
+    returning id
+  `);
+  return { inserted: rows.length > 0 };
 }
 
 export async function recentMessages(

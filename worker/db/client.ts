@@ -2,12 +2,12 @@ import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import * as schema from "./schema";
 
-export function db(env: Env) {
-  const client = postgres(env.HYPERDRIVE.connectionString, {
-    max: 5,
-    fetch_types: false,
+export const createDb = (url: string) =>
+  drizzle(postgres(url, { max: 5, fetch_types: false }), {
+    schema,
+    casing: "snake_case",
   });
-  return drizzle(client, { schema });
-}
 
-export type DB = ReturnType<typeof db>;
+export const db = (env: Env) => createDb(env.HYPERDRIVE.connectionString);
+
+export type DB = ReturnType<typeof createDb>;

@@ -1,15 +1,13 @@
 import { expect, test } from "bun:test";
 import { eq } from "drizzle-orm";
-import { drizzle } from "drizzle-orm/postgres-js";
-import postgres from "postgres";
+import { createDb } from "./client";
 import { insertUserMessage, listMessages } from "./messages";
 import * as schema from "./schema";
 
 test.skipIf(!process.env.DATABASE_URL)(
   "insertUserMessage twice with the same id stores one row",
   async () => {
-    const client = postgres(process.env.DATABASE_URL as string);
-    const db = drizzle(client, { schema });
+    const db = createDb(process.env.DATABASE_URL as string);
     const conversationId = crypto.randomUUID();
     const input = {
       conversationId,
@@ -25,7 +23,7 @@ test.skipIf(!process.env.DATABASE_URL)(
       await db
         .delete(schema.conversations)
         .where(eq(schema.conversations.id, conversationId));
-      await client.end();
+      await db.$client.end();
     }
   },
   15_000,
