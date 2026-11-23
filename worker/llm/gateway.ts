@@ -61,6 +61,7 @@ export async function* streamChat(
       signal.removeEventListener("abort", abort);
       if (signal.aborted) throw error;
       failures.push(`${provider.name}: ${errorMessage(error)}`);
+      console.warn(`provider ${provider.name} skipped: ${errorMessage(error)}`);
       continue;
     } finally {
       clearTimeout(timer);
