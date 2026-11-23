@@ -39,7 +39,7 @@ export function mockProvider(): Provider {
     name: "mock",
     model: "mock",
     async *stream(messages: ChatMessage[], signal: AbortSignal) {
-      const last = messages.filter((m) => m.role === "user").at(-1)?.content;
+      const last = messages.findLast((m) => m.role === "user")?.content;
       if (last === "/fail") throw new Error("mock failure");
       if (last === "/slow") await sleep(SLOW_DELAY_MS, signal);
 
