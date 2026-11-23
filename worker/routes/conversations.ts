@@ -2,6 +2,7 @@ import { Hono } from "hono";
 import { z } from "zod";
 import { db } from "../db/client";
 import {
+  deleteAllConversations,
   deleteConversation,
   listConversations,
   renameConversation,
@@ -81,6 +82,10 @@ export const conversations = new Hono<{ Bindings: Env }>()
       body.data.title,
     );
     return found ? c.body(null, 204) : c.json(notFound, 404);
+  })
+  .delete("/conversations", async (c) => {
+    await deleteAllConversations(db(c.env), SEED_USER_ID);
+    return c.body(null, 204);
   })
   .delete("/conversations/:id", async (c) => {
     const params = Params.safeParse(c.req.param());

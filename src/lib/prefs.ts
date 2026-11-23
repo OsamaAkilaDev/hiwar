@@ -1,46 +1,94 @@
 import { create } from "zustand";
-import { type Locale, resolveTheme, type Theme } from "./resolve-prefs";
+import {
+  type Accent,
+  type Locale,
+  type LocaleSetting,
+  paletteOf,
+  resolveAccent,
+  resolveLocale,
+  resolveLocaleSetting,
+  resolveTheme,
+  type Theme,
+} from "./resolve-prefs";
 
-const THEME_COLOR: Record<Theme, string> = {
-  dark: "#0d0e10",
-  light: "#fbfcfd",
+const THEME_COLOR = { dark: "#0c0c0e", light: "#fbfbfc" };
+
+const read = (key: string) => {
+  try {
+    return localStorage.getItem(key);
+  } catch {
+    return null;
+  }
 };
 
-const persist = (key: string, value: string) => {
+const persist = (key: string, value: string | null) => {
   try {
-    localStorage.setItem(key, value);
+    if (value === null) localStorage.removeItem(key);
+    else localStorage.setItem(key, value);
   } catch {}
 };
 
 type Prefs = {
   locale: Locale;
+  localeSetting: LocaleSetting;
   theme: Theme;
-  setLocale: (locale: Locale) => void;
+  /** The palette on screen; differs from `theme` only for "system". */
+  palette: "dark" | "light";
+  accent: Accent;
+  setLocale: (setting: LocaleSetting) => void;
   setTheme: (theme: Theme) => void;
+  setAccent: (accent: Accent) => void;
 };
 
 const html = document.documentElement;
+const scheme = matchMedia("(prefers-color-scheme: dark)");
+
+// Skips transitions for one frame so a theme change doesn't animate every color.
+const paint = (palette: "dark" | "light") => {
+  const freeze = document.createElement("style");
+  freeze.textContent = "*,*::before,*::after{transition:none!important}";
+  document.head.append(freeze);
+  html.dataset.theme = palette;
+  document
+    .querySelector('meta[name="theme-color"]')
+    ?.setAttribute("content", THEME_COLOR[palette]);
+  getComputedStyle(document.body).opacity;
+  requestAnimationFrame(() => freeze.remove());
+};
 
 export const usePrefs = create<Prefs>((set) => ({
   locale: html.lang === "ar" ? "ar" : "en",
-  theme: resolveTheme(html.dataset.theme ?? null),
-  setLocale: (locale) => {
-    persist("hiwar.locale", locale);
+  localeSetting: resolveLocaleSetting(read("hiwar.locale")),
+  theme: resolveTheme(read("hiwar.theme")),
+  palette: html.dataset.theme === "light" ? "light" : "dark",
+  accent: resolveAccent(read("hiwar.accent")),
+  setLocale: (setting) => {
+    persist("hiwar.locale", setting === "auto" ? null : setting);
+    const locale =
+      setting === "auto"
+        ? resolveLocale({ saved: null, languages: navigator.languages })
+        : setting;
     html.lang = locale;
     html.dir = locale === "ar" ? "rtl" : "ltr";
-    set({ locale });
+    set({ locale, localeSetting: setting });
   },
   setTheme: (theme) => {
-    const freeze = document.createElement("style");
-    freeze.textContent = "*,*::before,*::after{transition:none!important}";
-    document.head.append(freeze);
     persist("hiwar.theme", theme);
-    html.dataset.theme = theme;
-    document
-      .querySelector('meta[name="theme-color"]')
-      ?.setAttribute("content", THEME_COLOR[theme]);
-    set({ theme });
-    getComputedStyle(document.body).opacity;
-    requestAnimationFrame(() => freeze.remove());
+    const palette = paletteOf(theme, scheme.matches);
+    paint(palette);
+    set({ theme, palette });
+  },
+  setAccent: (accent) => {
+    persist("hiwar.accent", accent);
+    html.dataset.accent = accent;
+    set({ accent });
   },
 }));
+
+scheme.addEventListener("change", () => {
+  const { theme } = usePrefs.getState();
+  if (theme !== "system") return;
+  const palette = paletteOf(theme, scheme.matches);
+  paint(palette);
+  usePrefs.setState({ palette });
+});

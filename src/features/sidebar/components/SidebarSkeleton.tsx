@@ -6,7 +6,7 @@ export function SidebarSkeleton() {
       {widths.map((w) => (
         <div
           key={w}
-          className={`mx-2 h-8 animate-pulse rounded-lg bg-surface-2 ${w}`}
+          className={`mx-2 h-8 animate-pulse rounded-[0.65rem] bg-surface-2 ${w}`}
         />
       ))}
     </div>

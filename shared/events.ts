@@ -27,6 +27,8 @@ export const MessageDTO = z.object({
   createdAt: z.string(),
   error: ErrorCode.optional(),
   retryable: z.boolean().optional(),
+  provider: z.string().nullish(),
+  model: z.string().nullish(),
 });
 export type MessageDTO = z.infer<typeof MessageDTO>;
 

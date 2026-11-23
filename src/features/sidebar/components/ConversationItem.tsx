@@ -1,5 +1,5 @@
+import { PencilSimpleIcon, TrashIcon } from "@phosphor-icons/react";
 import { Link } from "@tanstack/react-router";
-import { Pencil, Trash2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import type { ConversationDTO } from "../../../../shared/events";
 import { useT } from "../../../i18n";
@@ -13,7 +13,7 @@ type Props = {
 };
 
 const action =
-  "grid size-7 place-items-center rounded-md text-fg-subtle hover:bg-surface hover:text-fg";
+  "grid size-8 place-items-center rounded-lg text-subtle hover:bg-surface-2 hover:text-fg";
 
 export function ConversationItem({
   conversation: { id, title },
@@ -47,7 +47,7 @@ export function ConversationItem({
   };
 
   return (
-    <li className="group relative rounded-lg">
+    <li className="group relative">
       {editing ? (
         <input
           ref={input}
@@ -60,7 +60,7 @@ export function ConversationItem({
             if (e.key === "Escape") cancelled.current = true;
             if (e.key === "Enter" || e.key === "Escape") e.currentTarget.blur();
           }}
-          className="w-full rounded-lg border border-border bg-bg px-3 py-2 text-fg text-sm"
+          className="w-full rounded-[0.65rem] border border-line bg-bg px-3 py-2 text-fg text-sm"
         />
       ) : (
         <>
@@ -72,7 +72,7 @@ export function ConversationItem({
             title={label}
             aria-current={active ? "page" : undefined}
             onClick={onNavigate}
-            className={`block truncate rounded-lg border border-transparent py-2 ps-3 pe-16 text-sm hover:bg-surface-2 hover:text-fg ${active ? "bg-surface-2 text-fg" : "text-fg-muted"}`}
+            className={`relative block truncate rounded-[0.65rem] py-2 ps-3.5 pe-18 text-sm hover:bg-surface-2 hover:text-fg ${active ? "bg-surface text-fg shadow-[inset_0_0_0_1px_var(--line)] before:absolute before:inset-y-2.5 before:start-1 before:w-[3px] before:rounded-full before:bg-accent" : "text-muted"}`}
           >
             {label}
           </Link>
@@ -88,7 +88,7 @@ export function ConversationItem({
               }}
               className={action}
             >
-              <Pencil className="size-4" aria-hidden />
+              <PencilSimpleIcon className="size-4" aria-hidden />
             </button>
             <button
               type="button"
@@ -96,7 +96,7 @@ export function ConversationItem({
               onClick={onDelete}
               className={action}
             >
-              <Trash2 className="size-4" aria-hidden />
+              <TrashIcon className="size-4" aria-hidden />
             </button>
           </div>
         </>

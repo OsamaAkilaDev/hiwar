@@ -34,6 +34,8 @@ const toDTO = (row: Row): MessageDTO => {
     content: row.content,
     status: row.status,
     createdAt: row.createdAt.toISOString(),
+    provider: row.provider,
+    model: row.model,
     ...(failure && { error: failure.code, retryable: failure.retryable }),
   };
 };

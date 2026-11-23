@@ -58,6 +58,11 @@ export async function renameConversation(id: string, title: string) {
   if (!res.ok) throw new HttpError(res.status);
 }
 
+export async function deleteAllConversations() {
+  const res = await fetch("/api/conversations", { method: "DELETE" });
+  if (!res.ok) throw new HttpError(res.status);
+}
+
 export async function deleteConversation(id: string) {
   const res = await fetch(`/api/conversations/${id}`, { method: "DELETE" });
   if (!res.ok) throw new HttpError(res.status);

@@ -6,12 +6,19 @@ import { MessageRow, NoResponse } from "./MessageRow";
 type Props = {
   messages: MessageDTO[];
   streamingId: string | null;
+  /** Ids already on screen when the conversation opened; only others animate in. */
+  settled: ReadonlySet<string>;
   onRetry: (userMessageId: string) => void;
 };
 
 const NEAR_BOTTOM_PX = 120;
 
-export function MessageList({ messages, streamingId, onRetry }: Props) {
+export function MessageList({
+  messages,
+  streamingId,
+  settled,
+  onRetry,
+}: Props) {
   const end = useRef<HTMLDivElement>(null);
   const pinned = useRef(true);
 
@@ -39,7 +46,7 @@ export function MessageList({ messages, streamingId, onRetry }: Props) {
   }, [messages.length]);
 
   return (
-    <div className="flex flex-col gap-7 pb-6">
+    <div className="flex flex-col gap-8 pb-6">
       {messages.map((m, i) => {
         if (m.role === "assistant") {
           const prev = messages[i - 1];
@@ -48,6 +55,7 @@ export function MessageList({ messages, streamingId, onRetry }: Props) {
               key={m.id}
               message={m}
               live={m.id === streamingId}
+              fresh={!settled.has(m.id)}
               onRetry={
                 prev?.role === "user" ? () => onRetry(prev.id) : undefined
               }
@@ -57,7 +65,7 @@ export function MessageList({ messages, streamingId, onRetry }: Props) {
         const unanswered = messages[i + 1]?.role !== "assistant";
         return (
           <Fragment key={m.id}>
-            <MessageRow message={m} live={false} />
+            <MessageRow message={m} live={false} fresh={!settled.has(m.id)} />
             {unanswered && streamingId === null ? (
               <div className="-mt-5">
                 <NoResponse onRetry={() => onRetry(m.id)} />

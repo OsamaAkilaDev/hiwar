@@ -1,4 +1,4 @@
-import { ArrowUp, Square } from "lucide-react";
+import { ArrowUpIcon, StopIcon } from "@phosphor-icons/react";
 import {
   type FormEvent,
   type KeyboardEvent,
@@ -70,46 +70,70 @@ export function Composer({ isStreaming, onSend, onStop }: Props) {
   };
 
   return (
-    <form
-      onSubmit={submit}
-      className="flex items-end gap-2 rounded-[17px] border border-border bg-surface p-2 shadow-lift transition-colors focus-within:border-fg-subtle"
-    >
-      <label htmlFor="composer" className="sr-only">
-        {t("composerLabel")}
-      </label>
-      <textarea
-        id="composer"
-        ref={input}
-        dir="auto"
-        rows={1}
-        // biome-ignore lint/a11y/noAutofocus: the composer is the page's only task
-        autoFocus={matchMedia("(pointer: fine)").matches}
-        value={text}
-        onChange={(e) => setText(e.target.value)}
-        onKeyDown={onKeyDown}
-        placeholder={t("composerPlaceholder")}
-        className="max-h-52 min-h-10 overflow-y-auto flex-1 resize-none bg-transparent px-2 py-2 leading-relaxed outline-none [&:lang(ar)]:leading-[1.85] placeholder:text-fg-subtle"
-      />
-      {isStreaming ? (
-        <button
-          type="button"
-          onClick={onStop}
-          aria-label={t("stop")}
-          aria-keyshortcuts="Escape"
-          className="grid size-9 shrink-0 place-items-center rounded-lg bg-fg text-bg transition-opacity hover:opacity-85"
-        >
-          <Square className="size-3.5" fill="currentColor" aria-hidden />
-        </button>
-      ) : (
-        <button
-          type="submit"
-          disabled={!canSend}
-          aria-label={t("send")}
-          className="grid size-9 shrink-0 place-items-center rounded-lg bg-accent text-accent-fg transition-[background-color,color,opacity] hover:opacity-90 disabled:bg-surface-2 disabled:text-fg-subtle"
-        >
-          <ArrowUp className="size-4.5" strokeWidth={2.25} aria-hidden />
-        </button>
-      )}
-    </form>
+    <>
+      <form
+        onSubmit={submit}
+        className="rounded-[1.25rem] border border-line bg-glass shadow-lift backdrop-blur-[20px] backdrop-saturate-150 transition-[border-color,box-shadow] focus-within:border-[color-mix(in_oklab,var(--accent)_55%,var(--line))] focus-within:shadow-[0_0_0_4px_var(--accent-soft),var(--lift)]"
+      >
+        <label htmlFor="composer" className="sr-only">
+          {t("composerLabel")}
+        </label>
+        <textarea
+          id="composer"
+          ref={input}
+          dir="auto"
+          rows={1}
+          // biome-ignore lint/a11y/noAutofocus: the composer is the page's only task
+          autoFocus={matchMedia("(pointer: fine)").matches}
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          onKeyDown={onKeyDown}
+          placeholder={t("composerPlaceholder")}
+          className="block max-h-56 min-h-14 w-full resize-none overflow-y-auto bg-transparent px-4.5 pt-4 pb-1.5 text-[0.95rem] leading-relaxed outline-none placeholder:text-subtle [&:lang(ar)]:leading-[1.85]"
+        />
+        <div className="flex justify-end px-2.5 pt-1 pb-2.5">
+          {isStreaming ? (
+            <button
+              type="button"
+              onClick={onStop}
+              aria-label={t("stop")}
+              aria-keyshortcuts="Escape"
+              className={sendButton}
+            >
+              <StopIcon weight="fill" className="size-4.5" aria-hidden />
+            </button>
+          ) : (
+            <button
+              type="submit"
+              disabled={!canSend}
+              aria-label={t("send")}
+              className={`${sendButton} disabled:bg-surface-2 disabled:text-subtle`}
+            >
+              <ArrowUpIcon weight="bold" className="size-4.5" aria-hidden />
+            </button>
+          )}
+        </div>
+      </form>
+      <p className="mt-2 hidden justify-center gap-4 text-subtle text-xs pointer-fine:flex">
+        <span>
+          <Kbd>Enter</Kbd> {t("hint.send")}
+        </span>
+        <span>
+          <Kbd>Shift Enter</Kbd> {t("hint.newline")}
+        </span>
+        <span>
+          <Kbd>Esc</Kbd> {t("hint.stop")}
+        </span>
+      </p>
+    </>
   );
 }
+
+const sendButton =
+  "grid size-9 place-items-center rounded-xl bg-accent text-accent-ink transition-[transform,filter] hover:brightness-105 active:scale-95";
+
+const Kbd = ({ children }: { children: string }) => (
+  <kbd className="rounded-[0.3rem] border border-line px-1.5 font-mono text-[0.7rem]">
+    {children}
+  </kbd>
+);

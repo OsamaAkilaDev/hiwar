@@ -76,4 +76,8 @@ export async function deleteConversation(
   return { found: rows.length > 0 };
 }
 
+export async function deleteAllConversations(db: DB, userId: string) {
+  await db.delete(conversations).where(eq(conversations.userId, userId));
+}
+
 export const setConversationTitle = renameConversation;

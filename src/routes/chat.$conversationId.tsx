@@ -1,6 +1,7 @@
 import { createFileRoute, useRouter } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { Composer } from "../features/chat/components/Composer";
+import { EmptyState } from "../features/chat/components/EmptyState";
 import { MessageList } from "../features/chat/components/MessageList";
 import { Note, RetryButton } from "../features/chat/components/MessageRow";
 import { useConversation } from "../features/chat/hooks/useConversation";
@@ -21,14 +22,20 @@ export const Route = createFileRoute("/chat/$conversationId")({
 });
 
 const column =
-  "mx-auto w-full max-w-[38rem] pr-[max(1rem,env(safe-area-inset-right))] pl-[max(1rem,env(safe-area-inset-left))]";
+  "mx-auto w-full max-w-[52rem] pr-[max(1.5rem,env(safe-area-inset-right))] pl-[max(1.5rem,env(safe-area-inset-left))]";
 
 function ChatScreen() {
-  const t = useT();
   const { conversationId } = Route.useParams();
+  return <Conversation key={conversationId} conversationId={conversationId} />;
+}
+
+function Conversation({ conversationId }: { conversationId: string }) {
+  const t = useT();
   const { data: messages = [] } = useConversation(conversationId);
   const { send, retry, stop, streamingId, isStreaming } =
     useSendMessage(conversationId);
+  // What was already there when the chat opened; later messages ease in.
+  const [settled] = useState(() => new Set(messages.map((m) => m.id)));
   const [announcement, setAnnouncement] = useState("");
   const watching = useRef<string | null>(null);
 
@@ -50,37 +57,27 @@ function ChatScreen() {
     );
   }, [streamingId, messages, t]);
 
-  const composer = (
-    <Composer isStreaming={isStreaming} onSend={send} onStop={stop} />
-  );
-
-  if (messages.length === 0) {
-    return (
-      <main
-        className={`${column} flex flex-1 flex-col justify-center pb-[12vh]`}
-      >
-        <h1 className="mb-6 text-center font-medium text-2xl tracking-tight rtl:tracking-normal">
-          {t("emptyHeading")}
-        </h1>
-        {composer}
-      </main>
-    );
-  }
-
   return (
     <main className="flex flex-1 flex-col">
-      <div className={`${column} flex-1 pt-4`}>
-        <MessageList
-          messages={messages}
-          streamingId={streamingId}
-          onRetry={retry}
-        />
+      <div className={`${column} flex-1 pt-7`}>
+        {messages.length === 0 ? (
+          <EmptyState onPick={send} />
+        ) : (
+          <MessageList
+            messages={messages}
+            streamingId={streamingId}
+            settled={settled}
+            onRetry={retry}
+          />
+        )}
       </div>
       <div aria-live="polite" className="sr-only">
         {announcement}
       </div>
-      <div className="sticky bottom-0 bg-bg pb-[max(1rem,env(safe-area-inset-bottom))]">
-        <div className={column}>{composer}</div>
+      <div className="sticky bottom-0 bg-linear-to-t from-bg from-60% to-transparent pt-6 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
+        <div className={column}>
+          <Composer isStreaming={isStreaming} onSend={send} onStop={stop} />
+        </div>
       </div>
     </main>
   );
@@ -90,7 +87,7 @@ function ChatSkeleton() {
   const t = useT();
   return (
     <main
-      className={`${column} flex flex-1 flex-col gap-7 pt-4`}
+      className={`${column} flex flex-1 flex-col gap-8 pt-7`}
       aria-busy="true"
       aria-label={t("loading")}
     >
