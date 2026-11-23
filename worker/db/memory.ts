@@ -39,6 +39,20 @@ export async function upsertFact(
     });
 }
 
+export async function updateFact(
+  db: DB,
+  userId: string,
+  id: string,
+  value: string,
+): Promise<{ found: boolean }> {
+  const rows = await db
+    .update(profileFacts)
+    .set({ value, updatedAt: sql`now()` })
+    .where(and(eq(profileFacts.id, id), eq(profileFacts.userId, userId)))
+    .returning({ id: profileFacts.id });
+  return { found: rows.length > 0 };
+}
+
 export async function deleteFact(db: DB, userId: string, id: string) {
   await db
     .delete(profileFacts)

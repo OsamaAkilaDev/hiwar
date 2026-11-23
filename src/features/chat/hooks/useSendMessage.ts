@@ -74,6 +74,7 @@ export function useSendMessage(conversationId: string) {
           assistantMessageId: assistant.id,
           text: user.content,
           locale: usePrefs.getState().locale,
+          memory: usePrefs.getState().memory,
         },
         abort.signal,
       );

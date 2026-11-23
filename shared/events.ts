@@ -46,6 +46,28 @@ export const ConversationList = z.object({
 });
 export type ConversationList = z.infer<typeof ConversationList>;
 
+export const FactDTO = z.object({
+  id: z.string(),
+  key: z.string(),
+  value: z.string(),
+  updatedAt: z.string(),
+});
+export type FactDTO = z.infer<typeof FactDTO>;
+
+export const MemoryDTO = z.object({
+  id: z.string(),
+  content: z.string(),
+  lang: z.string(),
+  createdAt: z.string(),
+});
+export type MemoryDTO = z.infer<typeof MemoryDTO>;
+
+export const MemorySnapshot = z.object({
+  facts: z.array(FactDTO),
+  memories: z.array(MemoryDTO),
+});
+export type MemorySnapshot = z.infer<typeof MemorySnapshot>;
+
 const base = { messageId: z.string(), seq: z.number() };
 
 export const StreamEvent = z.discriminatedUnion("type", [

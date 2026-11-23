@@ -78,9 +78,23 @@ export const en = {
   "name.label": "Your name",
   "name.hint": "Used in greetings. Stays on this device.",
   "language.auto": "Auto",
-  "memory.title": "Memory",
-  "memory.body": "Let Hiwar remember facts across chats.",
-  soon: "Soon",
+  "memory.use": "Use memory",
+  "memory.useHint":
+    "Hiwar remembers facts you share and uses them in new chats.",
+  "memory.privacy":
+    "Hiwar uses free AI models, which may use your messages to improve their services. Don't share anything you wouldn't want stored.",
+  "memory.off": "Memory is off. New chats won't use or save memories.",
+  "memory.about": "About you",
+  "memory.memories": "Memories",
+  "memory.empty": "Nothing remembered yet.",
+  "memory.editFact": "Edit",
+  "memory.deleteFact": "Delete",
+  "memory.deleteMemory": "Delete memory",
+  "memory.forget": "Forget everything",
+  "memory.forgetTitle": "Forget everything?",
+  "memory.forgetBody":
+    "This deletes every fact and memory Hiwar has about you. You can't undo this.",
+  "error.memory": "Couldn't update memory. Try again.",
   close: "Close",
   "data.deleteAll": "Delete all chats",
   "data.deleteAllBody":

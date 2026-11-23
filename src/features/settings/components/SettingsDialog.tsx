@@ -13,6 +13,8 @@ import { en } from "../../../i18n/en";
 import { usePrefs } from "../../../lib/prefs";
 import type { Accent, LocaleSetting, Theme } from "../../../lib/resolve-prefs";
 import { useDeleteAllConversations } from "../hooks/useDeleteAllConversations";
+import { useForgetAll } from "../hooks/useMemory";
+import { MemoryPanel } from "./MemoryPanel";
 
 type Tab = "appearance" | "data" | "memory";
 
@@ -92,6 +94,7 @@ export function SettingsDialog({
   const titleId = useId();
   const [tab, setTab] = useState<Tab>("appearance");
   const [confirming, setConfirming] = useState(false);
+  const [forgetting, setForgetting] = useState(false);
   const {
     theme,
     accent,
@@ -103,6 +106,7 @@ export function SettingsDialog({
     setName,
   } = usePrefs();
   const deleteAll = useDeleteAllConversations();
+  const forgetAll = useForgetAll();
 
   useEffect(() => {
     const el = dialog.current;
@@ -239,27 +243,7 @@ export function SettingsDialog({
               </p>
             )}
             {tab === "memory" && (
-              <div className="flex items-center justify-between gap-4 py-4">
-                <div>
-                  <span className="font-medium text-sm">
-                    {t("memory.title")}
-                  </span>
-                  <span className="ms-2 rounded-md border border-accent/40 px-1.5 py-0.5 font-mono text-[0.65rem] text-accent-text uppercase">
-                    {t("soon")}
-                  </span>
-                  <p className="mt-0.5 text-subtle text-xs">
-                    {t("memory.body")}
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  role="switch"
-                  aria-checked={false}
-                  aria-label={t("memory.title")}
-                  disabled
-                  className="relative h-6 w-10 shrink-0 rounded-full border border-line bg-surface-2 opacity-60 after:absolute after:start-0.5 after:top-0.5 after:size-4.5 after:rounded-full after:bg-muted after:content-['']"
-                />
-              </div>
+              <MemoryPanel onForget={() => setForgetting(true)} />
             )}
           </section>
         </div>
@@ -275,6 +259,14 @@ export function SettingsDialog({
           navigate({ to: "/" });
           onClose();
         }}
+      />
+      <ConfirmDialog
+        heading={t("memory.forgetTitle")}
+        body={t("memory.forgetBody")}
+        confirmLabel={t("memory.forget")}
+        open={forgetting}
+        onClose={() => setForgetting(false)}
+        onConfirm={() => forgetAll.mutate()}
       />
     </>
   );
