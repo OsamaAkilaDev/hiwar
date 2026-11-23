@@ -1,5 +1,6 @@
 import type {
   ChatStreamRequest,
+  ConversationList,
   MessageDTO,
   StreamEvent,
 } from "../../shared/events";
@@ -36,4 +37,28 @@ export async function* streamChat(
   });
   if (!res.ok || !res.body) throw new HttpError(res.status);
   yield* parseEventStream(res.body);
+}
+
+export async function listConversations(
+  cursor?: string,
+  signal?: AbortSignal,
+): Promise<ConversationList> {
+  const query = cursor ? `?cursor=${encodeURIComponent(cursor)}` : "";
+  const res = await fetch(`/api/conversations${query}`, { signal });
+  if (!res.ok) throw new HttpError(res.status);
+  return res.json();
+}
+
+export async function renameConversation(id: string, title: string) {
+  const res = await fetch(`/api/conversations/${id}`, {
+    method: "PATCH",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ title }),
+  });
+  if (!res.ok) throw new HttpError(res.status);
+}
+
+export async function deleteConversation(id: string) {
+  const res = await fetch(`/api/conversations/${id}`, { method: "DELETE" });
+  if (!res.ok) throw new HttpError(res.status);
 }

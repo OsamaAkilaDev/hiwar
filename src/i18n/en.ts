@@ -22,6 +22,8 @@ export const en = {
   "error.server": "Couldn't reach Hiwar's server. Try again.",
   "error.rate_limited": "Too many messages. Wait a minute, then try again.",
   "error.incomplete": "This reply didn't finish.",
+  "error.rename": "Couldn't rename this chat. Try again.",
+  "error.delete": "Couldn't delete this chat. Try again.",
 } as const;
 
 export type MessageKey = keyof typeof en;

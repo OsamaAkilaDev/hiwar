@@ -5,6 +5,7 @@ import { HttpError, streamChat } from "../../../lib/api";
 import { newId } from "../../../lib/ids";
 import { usePrefs } from "../../../lib/prefs";
 import { queryKeys } from "../../../lib/query-keys";
+import { type ConversationsData, patch, upsertTop } from "../../sidebar/cache";
 import { useChatStore } from "../store";
 import { createFrameFlusher } from "../stream/frame-flush";
 
@@ -32,6 +33,7 @@ const interrupted = (
 export function useSendMessage(conversationId: string) {
   const queryClient = useQueryClient();
   const key = queryKeys.messages(conversationId);
+  const listKey = queryKeys.conversations();
   const controller = useRef<AbortController | null>(null);
   const [streamingId, setStreamingId] = useState<string | null>(null);
 
@@ -39,6 +41,12 @@ export function useSendMessage(conversationId: string) {
 
   const setRows = (update: (rows: MessageDTO[]) => MessageDTO[]) =>
     queryClient.setQueryData<MessageDTO[]>(key, (rows) => update(rows ?? []));
+
+  const updateList = (update: (data: ConversationsData) => ConversationsData) =>
+    queryClient.setQueryData<ConversationsData>(
+      listKey,
+      (data) => data && update(data),
+    );
 
   const run = async (user: MessageDTO, assistant: MessageDTO) => {
     const { append, clear } = useChatStore.getState();
@@ -72,6 +80,10 @@ export function useSendMessage(conversationId: string) {
       let ended = false;
       for await (const event of events) {
         if (event.type === "delta") flusher.push(assistant.id, event.text);
+        else if (event.type === "title")
+          updateList((data) =>
+            patch(data, conversationId, { title: event.title }),
+          );
         else if (event.type === "done") {
           settle(event.message);
           ended = true;
@@ -89,6 +101,7 @@ export function useSendMessage(conversationId: string) {
       settle(interrupted(abort.signal, cause));
     } finally {
       controller.current = null;
+      void queryClient.invalidateQueries({ queryKey: listKey });
       setStreamingId(null);
     }
   };
@@ -100,6 +113,16 @@ export function useSendMessage(conversationId: string) {
   ) => {
     await queryClient.cancelQueries({ queryKey: key });
     setRows(rows);
+    updateList((data) =>
+      upsertTop(data, {
+        id: conversationId,
+        title:
+          data.pages
+            .flatMap((page) => page.conversations)
+            .find((c) => c.id === conversationId)?.title ?? null,
+        lastMessageAt: new Date().toISOString(),
+      }),
+    );
     await run(user, assistant);
   };
 

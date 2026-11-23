@@ -25,4 +25,6 @@ export const ar: Record<MessageKey, string> = {
   "error.server": "ما قدرنا نوصل للسيرفر. جرّب مرة ثانية.",
   "error.rate_limited": "أرسلت رسائل كثيرة بسرعة. انتظر دقيقة وجرّب مرة ثانية.",
   "error.incomplete": "الرد ما اكتمل.",
+  "error.rename": "ما قدرنا نغيّر اسم المحادثة. جرّب مرة ثانية.",
+  "error.delete": "ما قدرنا نحذف المحادثة. جرّب مرة ثانية.",
 };
