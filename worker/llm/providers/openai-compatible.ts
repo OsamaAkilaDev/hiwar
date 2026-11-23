@@ -14,7 +14,9 @@ export function openAICompatible({
   apiKey,
   model,
 }: Options): Provider {
-  const client = new OpenAI({ apiKey, baseURL });
+  // The gateway owns retries and fallback; SDK retries would hide failures
+  // and eat the first-token budget.
+  const client = new OpenAI({ apiKey, baseURL, maxRetries: 0 });
   return {
     name,
     model,
