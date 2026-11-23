@@ -51,7 +51,10 @@ export async function* streamChat(
           firstTokenTimeoutMs,
         );
       });
-      first = await Promise.race([iterator.next(), timeout]);
+      const next = iterator.next();
+      next.catch(() => {}); // a late rejection after a timeout is expected
+      first = await Promise.race([next, timeout]);
+      if (first.done) throw new Error("empty response");
     } catch (error) {
       attempt.abort();
       iterator.return?.()?.catch(() => {});
@@ -64,7 +67,11 @@ export async function* streamChat(
     }
 
     try {
-      for (let r = first; !r.done; r = await iterator.next()) {
+      for (
+        let r: IteratorResult<string> = first;
+        !r.done;
+        r = await iterator.next()
+      ) {
         yield { provider, text: r.value };
       }
     } finally {

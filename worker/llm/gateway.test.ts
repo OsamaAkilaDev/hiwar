@@ -69,3 +69,18 @@ test("does not fall through after first token", async () => {
   await expect(run()).rejects.toThrow("mid-stream");
   expect(seen).toEqual(["part"]);
 });
+
+test("falls through when first provider ends without a token", async () => {
+  const empty = fake("empty", async function* () {
+    yield* [];
+  });
+  const good = fake("good", async function* () {
+    yield "ok";
+  });
+  const out = await collect(
+    streamChat([empty, good], messages, {
+      signal: new AbortController().signal,
+    }),
+  );
+  expect(out).toEqual(["ok"]);
+});
