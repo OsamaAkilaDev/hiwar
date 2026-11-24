@@ -25,8 +25,16 @@ const ownedBy = (db: DB, userId: string) =>
       ),
   );
 
+type Citation = { title: string; url: string };
+
+const citationsOf = (parts: unknown) =>
+  (parts as { type?: string; items?: Citation[] }[]).find(
+    (p) => p.type === "citations",
+  )?.items;
+
 const toDTO = (row: Row): MessageDTO => {
   const failure = errorPart(row.parts);
+  const citations = citationsOf(row.parts);
   return {
     id: row.id,
     conversationId: row.conversationId,
@@ -37,6 +45,7 @@ const toDTO = (row: Row): MessageDTO => {
     provider: row.provider,
     model: row.model,
     ...(failure && { error: failure.code, retryable: failure.retryable }),
+    ...(citations?.length && { citations }),
   };
 };
 
@@ -121,13 +130,20 @@ export async function saveAssistantMessage(
   db: DB,
   {
     error,
+    citations = [],
     ...input
   }: Pick<
     Row,
     "id" | "conversationId" | "content" | "status" | "provider" | "model"
-  > & { error?: { code: ErrorCode; retryable: boolean } },
+  > & {
+    error?: { code: ErrorCode; retryable: boolean };
+    citations?: Citation[];
+  },
 ): Promise<MessageDTO> {
-  const parts = error ? [{ type: "error", ...error }] : [];
+  const parts = [
+    ...(error ? [{ type: "error", ...error }] : []),
+    ...(citations.length ? [{ type: "citations", items: citations }] : []),
+  ];
   return db.transaction(async (tx) => {
     const [row] = await tx
       .insert(messages)

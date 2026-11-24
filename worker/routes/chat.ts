@@ -16,9 +16,17 @@ import { SEED_USER_ID } from "../db/schema";
 import { providersFromEnv, streamChat } from "../llm/gateway";
 import { systemPrompt } from "../llm/prompts/system";
 import { generateTitle } from "../llm/title";
-import type { ChatMessage, Provider } from "../llm/types";
+import type { ChatMessage, Provider, ToolCall } from "../llm/types";
 import { extractMemories } from "../memory/extract";
 import { type Context, contextFor, touch } from "../memory/retrieve";
+import {
+  formatResults,
+  MAX_SEARCHES,
+  queryOf,
+  SEARCH_TOOL,
+  SEARCH_UNAVAILABLE,
+  webSearch,
+} from "../tools/search";
 
 const TITLE_TIMEOUT_MS = 5000;
 
@@ -144,26 +152,79 @@ export const chat = new Hono<{ Bindings: Env }>().post(
         let provider: Provider | undefined;
         let ttftMs: number | undefined;
         let failed = false;
+        const citations: { title: string; url: string }[] = [];
 
+        const thread: ChatMessage[] = [
+          {
+            role: "system",
+            content: systemPrompt(locale, {
+              facts: known.facts,
+              memories: known.memories.map((m) => m.content),
+            }),
+          },
+          ...history,
+        ];
+        let searches = 0;
+
+        // Tool loop: stream; if the model asked to search, run it, hand the
+        // results back and stream again. Past the cap the tool is withdrawn,
+        // so the model has to answer.
         try {
-          for await (const chunk of streamChat(
-            providers,
-            [
-              {
-                role: "system",
-                content: systemPrompt(locale, {
-                  facts: known.facts,
-                  memories: known.memories.map((m) => m.content),
-                }),
-              },
-              ...history,
-            ],
-            { signal },
-          )) {
-            provider = chunk.provider;
-            ttftMs ??= Date.now() - startedAt;
-            content += chunk.text;
-            await send({ type: "delta", text: chunk.text });
+          for (;;) {
+            const calls: ToolCall[] = [];
+            let roundText = "";
+            for await (const chunk of streamChat(providers, thread, {
+              signal,
+              tools: searches < MAX_SEARCHES ? [SEARCH_TOOL] : undefined,
+            })) {
+              provider = chunk.provider;
+              if (chunk.toolCall) {
+                calls.push(chunk.toolCall);
+                continue;
+              }
+              ttftMs ??= Date.now() - startedAt;
+              roundText += chunk.text;
+              content += chunk.text;
+              await send({ type: "delta", text: chunk.text });
+            }
+            if (!calls.length) break;
+
+            thread.push({
+              role: "assistant",
+              content: roundText,
+              toolCalls: calls,
+            });
+            for (const call of calls) {
+              const query = queryOf(call.args);
+              let result = "Search limit reached for this reply.";
+              if (searches < MAX_SEARCHES) {
+                searches++;
+                await send({ type: "tool_start", name: call.name, query });
+                try {
+                  const results = await webSearch(
+                    c.env.TAVILY_API_KEY,
+                    query,
+                    signal,
+                  );
+                  const found = results
+                    .filter((r) => !citations.some((s) => s.url === r.url))
+                    .map(({ title, url }) => ({ title, url }));
+                  citations.push(...found);
+                  await send({ type: "tool_result", citations: found });
+                  result = formatResults(results);
+                } catch (error) {
+                  if (signal.aborted) throw error;
+                  console.error("chat.search failed", error);
+                  await send({ type: "tool_result", citations: [] });
+                  result = SEARCH_UNAVAILABLE;
+                }
+              }
+              thread.push({
+                role: "tool",
+                toolCallId: call.id,
+                content: result,
+              });
+            }
           }
         } catch (error) {
           failed = true;
@@ -193,6 +254,7 @@ export const chat = new Hono<{ Bindings: Env }>().post(
           provider: provider?.name ?? null,
           model: provider?.model ?? null,
           error,
+          citations,
         });
 
         const message = await saved;
@@ -239,6 +301,7 @@ export const chat = new Hono<{ Bindings: Env }>().post(
             ttftMs,
             totalMs: Date.now() - startedAt,
             chars: content.length,
+            searches,
             status,
           }),
         );

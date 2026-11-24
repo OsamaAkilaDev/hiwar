@@ -30,6 +30,9 @@ export const MessageDTO = z.object({
   retryable: z.boolean().optional(),
   provider: z.string().nullish(),
   model: z.string().nullish(),
+  citations: z
+    .array(z.object({ title: z.string(), url: z.string() }))
+    .optional(),
 });
 export type MessageDTO = z.infer<typeof MessageDTO>;
 
