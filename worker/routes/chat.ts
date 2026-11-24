@@ -20,6 +20,7 @@ import type { ChatMessage, Provider, ToolCall } from "../llm/types";
 import { extractMemories } from "../memory/extract";
 import { type Context, contextFor, touch } from "../memory/retrieve";
 import {
+  flattenTools,
   formatResults,
   MAX_SEARCHES,
   queryOf,
@@ -167,16 +168,18 @@ export const chat = new Hono<{ Bindings: Env }>().post(
         let searches = 0;
 
         // Tool loop: stream; if the model asked to search, run it, hand the
-        // results back and stream again. Past the cap the tool is withdrawn,
-        // so the model has to answer.
+        // results back and stream again. At the cap the last call gets no tools
+        // and a plain-text history (flattenTools), so it can only answer.
         try {
           for (;;) {
+            const last = searches >= MAX_SEARCHES;
             const calls: ToolCall[] = [];
             let roundText = "";
-            for await (const chunk of streamChat(providers, thread, {
-              signal,
-              tools: searches < MAX_SEARCHES ? [SEARCH_TOOL] : undefined,
-            })) {
+            for await (const chunk of streamChat(
+              providers,
+              last ? flattenTools(thread) : thread,
+              { signal, tools: last ? undefined : [SEARCH_TOOL] },
+            )) {
               provider = chunk.provider;
               if (chunk.toolCall) {
                 calls.push(chunk.toolCall);
@@ -187,7 +190,7 @@ export const chat = new Hono<{ Bindings: Env }>().post(
               content += chunk.text;
               await send({ type: "delta", text: chunk.text });
             }
-            if (!calls.length) break;
+            if (!calls.length || last) break;
 
             thread.push({
               role: "assistant",
@@ -206,12 +209,18 @@ export const chat = new Hono<{ Bindings: Env }>().post(
                     query,
                     signal,
                   );
-                  const found = results
-                    .filter((r) => !citations.some((s) => s.url === r.url))
-                    .map(({ title, url }) => ({ title, url }));
-                  citations.push(...found);
-                  await send({ type: "tool_result", citations: found });
-                  result = formatResults(results);
+                  const before = citations.length;
+                  const numbered = results.map((r) => {
+                    let at = citations.findIndex((s) => s.url === r.url);
+                    if (at < 0)
+                      at = citations.push({ title: r.title, url: r.url }) - 1;
+                    return { ...r, n: at + 1 };
+                  });
+                  await send({
+                    type: "tool_result",
+                    citations: citations.slice(before),
+                  });
+                  result = formatResults(numbered);
                 } catch (error) {
                   if (signal.aborted) throw error;
                   console.error("chat.search failed", error);

@@ -2,6 +2,8 @@ import { marked } from "marked";
 import { type ComponentProps, memo, useMemo } from "react";
 import ReactMarkdown, { type ExtraProps } from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { useT } from "../../../i18n";
+import { type Citation, linkCitations } from "../../../lib/citations";
 import { dirProps } from "../../../lib/dir";
 import { CopyButton } from "./CopyButton";
 
@@ -32,29 +34,67 @@ function CodeBlock({ node, children }: ComponentProps<"pre"> & ExtraProps) {
   );
 }
 
+// Model output can carry links from search results: every link opens in a
+// new tab without handing the page a reference back. Citation markers
+// (titled "cite" by linkCitations) render as small numbered chips.
+function Link({
+  node: _,
+  href,
+  title,
+  children,
+  ...rest
+}: ComponentProps<"a"> & ExtraProps) {
+  const t = useT();
+  const cite = title === "cite";
+  return (
+    <a
+      {...rest}
+      href={href}
+      title={cite ? undefined : title}
+      target="_blank"
+      rel="noopener noreferrer"
+      className={cite ? "cite" : undefined}
+      aria-label={cite ? t("source", { n: String(children) }) : undefined}
+    >
+      {children}
+    </a>
+  );
+}
+
+const components = { pre: CodeBlock, a: Link };
+
 const Block = memo(function Block({ source }: { source: string }) {
   return (
     <div {...dirProps(source)}>
-      <ReactMarkdown
-        remarkPlugins={[remarkGfm]}
-        components={{ pre: CodeBlock }}
-      >
+      <ReactMarkdown remarkPlugins={[remarkGfm]} components={components}>
         {source}
       </ReactMarkdown>
     </div>
   );
 });
 
+const NO_CITATIONS: Citation[] = [];
+
 // Split into top-level blocks so finished blocks never re-parse while the
 // last one streams in. Unclosed fences and half tables stay in the last block.
-export const Markdown = memo(function Markdown({ text }: { text: string }) {
+export const Markdown = memo(function Markdown({
+  text,
+  citations = NO_CITATIONS,
+}: {
+  text: string;
+  citations?: Citation[];
+}) {
   const blocks = useMemo(
     () =>
       marked
         .lexer(text)
-        .map((token) => token.raw)
+        .map((token) =>
+          token.type === "code"
+            ? token.raw
+            : linkCitations(token.raw, citations),
+        )
         .filter((raw) => raw.trim()),
-    [text],
+    [text, citations],
   );
   return (
     <div className="prose-chat">

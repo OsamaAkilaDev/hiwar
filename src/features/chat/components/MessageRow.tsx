@@ -1,9 +1,16 @@
-import { ArrowClockwiseIcon } from "@phosphor-icons/react";
-import { memo, type ReactNode, useEffect, useState } from "react";
+import { ArrowClockwiseIcon, MagnifyingGlassIcon } from "@phosphor-icons/react";
+import {
+  type CSSProperties,
+  memo,
+  type ReactNode,
+  useEffect,
+  useState,
+} from "react";
 import type { MessageDTO } from "../../../../shared/events";
 import { Mark } from "../../../components/Mark";
 import { useT } from "../../../i18n";
-import { dirProps } from "../../../lib/dir";
+import { type Citation, citedIn, domainOf } from "../../../lib/citations";
+import { dirOf, dirProps } from "../../../lib/dir";
 import { usePrefs } from "../../../lib/prefs";
 import { useChatStore } from "../store";
 import { CopyButton } from "./CopyButton";
@@ -25,7 +32,10 @@ export const MessageRow = memo(function MessageRow({
 }: Props) {
   const t = useT();
   const streamed = useChatStore((s) => s.streams[message.id]?.text);
+  const search = useChatStore((s) => s.streams[message.id]?.search);
+  const liveCitations = useChatStore((s) => s.streams[message.id]?.citations);
   const text = streamed ?? message.content;
+  const citations = liveCitations ?? message.citations;
 
   if (message.role === "user") {
     return (
@@ -62,9 +72,20 @@ export const MessageRow = memo(function MessageRow({
       />
       <div className={live && text ? "streaming" : undefined}>
         <div {...(text ? dirProps(text) : {})}>
-          {text ? <Markdown text={text} /> : null}
+          {text ? <Markdown text={text} citations={citations} /> : null}
         </div>
-        {status === "streaming" && live && !text ? <LoadingWords /> : null}
+        {live && search ? (
+          <Searching query={search} />
+        ) : status === "streaming" && live && !text ? (
+          <LoadingWords />
+        ) : null}
+        {citations?.length ? (
+          <Sources
+            citations={citations}
+            text={text}
+            done={status === "complete"}
+          />
+        ) : null}
         {stopped ? (
           <Note>
             {t("stopped")}
@@ -206,5 +227,80 @@ function LoadingWords() {
     <div aria-hidden className="typing-caret py-1 text-muted text-sm">
       {shown}
     </div>
+  );
+}
+
+function Searching({ query }: { query: string }) {
+  const t = useT();
+  return (
+    <p className="enter mt-1 flex w-fit max-w-full items-center gap-2 rounded-full bg-surface-2 py-1.5 ps-2.5 pe-3.5 text-muted text-sm [--i:0]">
+      <MagnifyingGlassIcon
+        className="size-3.5 shrink-0 animate-pulse text-accent-text"
+        aria-hidden
+      />
+      <span className="truncate">
+        {t("searching")}{" "}
+        <span {...dirProps(query)} className="text-fg">
+          {query}
+        </span>
+      </span>
+    </p>
+  );
+}
+
+// Only the sources the answer cites, under their original numbers. A reply
+// that cites nothing still shows its top results once it is done.
+function Sources({
+  citations,
+  text,
+  done,
+}: {
+  citations: Citation[];
+  text: string;
+  done: boolean;
+}) {
+  const cited = citedIn(text).filter((n) => citations[n - 1]);
+  const shown = cited.length
+    ? cited.map((n) => ({ n, source: citations[n - 1] as Citation }))
+    : done
+      ? citations.slice(0, 5).map((source, i) => ({ n: i + 1, source }))
+      : [];
+  if (!shown.length) return null;
+  return <SourceList shown={shown} dir={dirOf(text)} />;
+}
+
+function SourceList({
+  shown,
+  dir,
+}: {
+  shown: { n: number; source: Citation }[];
+  dir: "rtl" | "ltr";
+}) {
+  const t = useT();
+  return (
+    <nav
+      aria-label={t("sources")}
+      dir={dir}
+      className="mt-3 flex flex-wrap gap-1.5"
+    >
+      {shown.map(({ n, source: c }, i) => (
+        <a
+          key={c.url}
+          href={c.url}
+          title={c.title}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="row-in inline-flex max-w-56 items-center gap-1.5 rounded-full bg-surface-2 py-1 ps-1 pe-2.5 text-muted text-xs transition-colors hover:bg-accent-soft hover:text-fg"
+          style={{ "--i": i } as CSSProperties}
+        >
+          <span className="grid h-4.5 min-w-4.5 place-items-center rounded-full bg-surface px-1 font-mono text-[0.65rem] text-accent-text">
+            {n}
+          </span>
+          <span dir="ltr" className="truncate">
+            {domainOf(c.url)}
+          </span>
+        </a>
+      ))}
+    </nav>
   );
 }
