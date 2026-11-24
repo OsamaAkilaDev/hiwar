@@ -30,7 +30,7 @@ export function Header({ sidebarOpen, onToggleSidebar }: Props) {
       </button>
       <p
         dir="auto"
-        className="min-w-0 flex-1 truncate px-1.5 font-medium text-sm"
+        className="-my-1 min-w-0 flex-1 truncate px-1.5 py-1 font-medium text-sm"
         style={{ textAlign: rtlUI ? "right" : "left" }}
       >
         {title ?? t("newChat")}

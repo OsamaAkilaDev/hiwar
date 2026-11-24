@@ -82,7 +82,7 @@ export function ConversationItem({
             {/* Truncates at the title's own end (dir auto), lined up with the UI. */}
             <span
               dir="auto"
-              className="block truncate"
+              className="-my-1 block truncate py-1"
               style={{ textAlign: rtlUI ? "right" : "left" }}
             >
               {label}
