@@ -76,7 +76,7 @@ const Block = memo(function Block({ source }: { source: string }) {
       {source}
     </ReactMarkdown>
   );
-  const math = !/^s*(```|~~~)/.test(source) && hasMath(source);
+  const math = !/^\s*(```|~~~)/.test(source) && hasMath(source);
   return (
     <div {...dirProps(source)}>
       {math ? (

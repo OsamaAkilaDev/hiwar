@@ -63,7 +63,9 @@ export function useSendMessage(conversationId: string) {
           row.id === assistant.id ? { ...row, content: text, ...patch } : row,
         ),
       );
-      clear(assistant.id);
+      // The query cache notifies on the next task; clearing the live text now
+      // would blank the reply for a frame (and unpin the scroll).
+      setTimeout(() => clear(assistant.id));
     };
 
     try {

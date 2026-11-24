@@ -1,20 +1,24 @@
 import { createFileRoute, useRouter } from "@tanstack/react-router";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import type { MessageDTO } from "../../shared/events";
 import { Composer } from "../features/chat/components/Composer";
 import { EmptyState } from "../features/chat/components/EmptyState";
 import { MessageList } from "../features/chat/components/MessageList";
 import { Note, RetryButton } from "../features/chat/components/MessageRow";
-import { useConversation } from "../features/chat/hooks/useConversation";
+import {
+  fetchMessages,
+  useConversation,
+  useOlderMessages,
+} from "../features/chat/hooks/useConversation";
 import { useSendMessage } from "../features/chat/hooks/useSendMessage";
 import { useT } from "../i18n";
-import { getMessages } from "../lib/api";
 import { queryKeys } from "../lib/query-keys";
 
 export const Route = createFileRoute("/chat/$conversationId")({
   loader: ({ context: { queryClient }, params: { conversationId } }) =>
     queryClient.ensureQueryData({
       queryKey: queryKeys.messages(conversationId),
-      queryFn: () => getMessages(conversationId),
+      queryFn: () => fetchMessages(queryClient, conversationId),
     }),
   pendingComponent: ChatSkeleton,
   errorComponent: ChatError,
@@ -36,6 +40,16 @@ function Conversation({ conversationId }: { conversationId: string }) {
     useSendMessage(conversationId);
   // What was already there when the chat opened; later messages ease in.
   const [settled] = useState(() => new Set(messages.map((m) => m.id)));
+  // Older pages arrive already read, so they never ease in either.
+  const loadOlder = useOlderMessages(
+    conversationId,
+    useCallback(
+      (rows: MessageDTO[]) => {
+        for (const m of rows) settled.add(m.id);
+      },
+      [settled],
+    ),
+  );
   const [announcement, setAnnouncement] = useState("");
   const watching = useRef<string | null>(null);
 
@@ -91,6 +105,7 @@ function Conversation({ conversationId }: { conversationId: string }) {
               messages={messages}
               streamingId={streamingId}
               settled={settled}
+              onReachTop={loadOlder}
               onRetry={retry}
             />
           </div>
