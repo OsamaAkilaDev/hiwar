@@ -4,7 +4,9 @@ import ReactMarkdown, { type ExtraProps } from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { useT } from "../../../i18n";
 import { type Citation, linkCitations } from "../../../lib/citations";
-import { dirProps } from "../../../lib/dir";
+import { dirOf, dirProps } from "../../../lib/dir";
+import { isClosedFence, isVisualLang, type VisualLang } from "../visuals/spec";
+import { Visual } from "../visuals/Visual";
 import { CopyButton } from "./CopyButton";
 
 // Fenced code gets a header with the language and a copy button.
@@ -75,8 +77,13 @@ const Block = memo(function Block({ source }: { source: string }) {
 
 const NO_CITATIONS: Citation[] = [];
 
+type Item =
+  | { kind: "md"; raw: string }
+  | { kind: "visual"; raw: string; lang: VisualLang; code: string };
+
 // Split into top-level blocks so finished blocks never re-parse while the
 // last one streams in. Unclosed fences and half tables stay in the last block.
+// Fences tagged chart, mermaid, stepper or html become visuals.
 export const Markdown = memo(function Markdown({
   text,
   citations = NO_CITATIONS,
@@ -84,24 +91,43 @@ export const Markdown = memo(function Markdown({
   text: string;
   citations?: Citation[];
 }) {
-  const blocks = useMemo(
+  const items = useMemo(
     () =>
       marked
         .lexer(text)
-        .map((token) =>
-          token.type === "code"
-            ? token.raw
-            : linkCitations(token.raw, citations),
-        )
-        .filter((raw) => raw.trim()),
+        .filter((token) => token.raw.trim())
+        .map((token): Item => {
+          if (token.type !== "code") {
+            return { kind: "md", raw: linkCitations(token.raw, citations) };
+          }
+          const lang = String(token.lang ?? "")
+            .trim()
+            .toLowerCase();
+          return isVisualLang(lang)
+            ? { kind: "visual", raw: token.raw, lang, code: token.text }
+            : { kind: "md", raw: token.raw };
+        }),
     [text, citations],
   );
+  const dir = dirOf(text);
   return (
     <div className="prose-chat">
-      {blocks.map((raw, i) => (
-        // biome-ignore lint/suspicious/noArrayIndexKey: blocks only ever append
-        <Block key={i} source={raw} />
-      ))}
+      {items.map((item, i) =>
+        item.kind === "visual" ? (
+          <Visual
+            // biome-ignore lint/suspicious/noArrayIndexKey: blocks only ever append
+            key={i}
+            lang={item.lang}
+            code={item.code}
+            closed={isClosedFence(item.raw)}
+            dir={dir}
+            fallback={() => <Block source={item.raw} />}
+          />
+        ) : (
+          // biome-ignore lint/suspicious/noArrayIndexKey: blocks only ever append
+          <Block key={i} source={item.raw} />
+        ),
+      )}
     </div>
   );
 });

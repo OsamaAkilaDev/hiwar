@@ -65,6 +65,13 @@ export const ar: Record<MessageKey, string> = {
     "مساء الخير يا {name}|مساء النور يا {name}|مساؤك سعيد يا {name}|شيء أخير قبل نهاية اليوم يا {name}؟",
   "greetings.night":
     "ما زلت مستيقظاً يا {name}؟|سهرة عمل يا {name}؟|فكرة آخر الليل يا {name}؟|الليل هادئ يا {name}، بماذا تفكّر؟",
+  "visual.drawing.chart": "يرسم المخطط",
+  "visual.drawing.mermaid": "يرسم الشكل التوضيحي",
+  "visual.drawing.stepper": "يرتّب الخطوات",
+  "visual.drawing.html": "يجهّز المعاينة",
+  "visual.showSource": "اعرض الكود",
+  "visual.hideSource": "أخفِ الكود",
+  "visual.html": "معاينة تفاعلية",
   you: "أنت",
   "settings.appearance": "المظهر",
   "settings.data": "البيانات",

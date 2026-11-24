@@ -6,20 +6,44 @@ const CHUNK_SIZE = 8;
 const CHUNK_DELAY_MS = 30;
 const SLOW_DELAY_MS = 2000;
 
+const FENCE = "```";
+
 const ANSWER = `React هي مكتبة جافاسكريبت لبناء واجهات المستخدم من مكونات صغيرة قابلة لإعادة الاستخدام.
 
 React is a JavaScript library for building user interfaces out of small, reusable components.
 
-\`\`\`chart
-{ "kind": "bar", "title": "Weekly downloads (millions)", "data": [{ "label": "React", "value": 25 }, { "label": "Vue", "value": 5 }, { "label": "Svelte", "value": 1 }] }
-\`\`\`
+${FENCE}chart
+{"kind":"bar","title":"Weekly downloads","unit":"M","data":[{"label":"React","value":25},{"label":"Vue","value":5},{"label":"Svelte","value":1}]}
+${FENCE}
 
-\`\`\`ts
+How a render flows:
+
+${FENCE}mermaid
+flowchart TD
+  A["State changes"] --> B["Component re-renders"]
+  B --> C{"Output changed?"}
+  C -- yes --> D["DOM updated"]
+  C -- no --> E["Nothing to do"]
+${FENCE}
+
+${FENCE}stepper
+{ "title": "Start a project", "steps": [{ "title": "Create the app", "body": "Run bun create vite and pick React." }, { "title": "Install", "body": "bun install pulls the dependencies." }, { "title": "Run it", "body": "bun dev starts the dev server." }] }
+${FENCE}
+
+${FENCE}chart
+{"kind":"line","title":"Stars over time","unit":"k","data":[{"label":"2019","value":140},{"label":"2020","value":165},{"label":"2021","value":190},{"label":"2022","value":205},{"label":"2023","value":220},{"label":"2024","value":232}]}
+${FENCE}
+
+${FENCE}chart
+{"kind":"donut","title":"Where time goes","data":[{"label":"Rendering","value":45},{"label":"Scripting","value":30},{"label":"Layout","value":15},{"label":"Idle","value":10}]}
+${FENCE}
+
+${FENCE}ts
 function Counter() {
   const [count, setCount] = useState(0);
   return <button onClick={() => setCount(count + 1)}>{count}</button>;
 }
-\`\`\`
+${FENCE}
 `;
 
 const EXTRACTION = `\`\`\`json

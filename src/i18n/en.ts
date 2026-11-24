@@ -63,6 +63,13 @@ export const en = {
     "Good evening, {name}|Evening, {name}|Winding down, {name}?|One more thing before the day ends, {name}?",
   "greetings.night":
     "Up late, {name}?|Burning the midnight oil, {name}?|Night owl mode, {name}|Still going, {name}?",
+  "visual.drawing.chart": "Drawing the chart",
+  "visual.drawing.mermaid": "Drawing the diagram",
+  "visual.drawing.stepper": "Laying out the steps",
+  "visual.drawing.html": "Building the preview",
+  "visual.showSource": "Show source",
+  "visual.hideSource": "Hide source",
+  "visual.html": "Interactive preview",
   you: "You",
   "settings.appearance": "Appearance",
   "settings.data": "Data",

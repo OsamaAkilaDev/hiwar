@@ -502,3 +502,86 @@
     background: var(--accent-soft);
   }
 }
+
+/* Visual cards: same shell as code blocks. Prose list and spacing rules stop
+   at the card edge. */
+.visual,
+.visual-placeholder {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 0.9rem;
+  padding: 1rem 1.1rem;
+}
+.visual-placeholder {
+  background: color-mix(in oklab, var(--surface) 60%, transparent);
+}
+.prose-chat .visual :is(ul, ol) {
+  list-style: none;
+  padding-inline-start: 0;
+}
+.prose-chat .visual :is(li + li, div > * + *) {
+  margin-block-start: 0;
+}
+.mermaid-svg svg {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Step rail: a hairline joining each number to the next. */
+.step:not(:last-child)::before {
+  content: "";
+  position: absolute;
+  inset-block: 1.75rem 0;
+  inset-inline-start: calc(0.875rem - 0.5px);
+  width: 1px;
+  background: var(--line);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .chart-bar {
+    transform-origin: left;
+    animation: grow-x 600ms cubic-bezier(0.2, 0, 0, 1) both;
+    animation-delay: calc(var(--i, 0) * 50ms);
+  }
+  .chart-bar:dir(rtl) {
+    transform-origin: right;
+  }
+  .chart-wipe {
+    animation: wipe 900ms cubic-bezier(0.2, 0, 0, 1) both;
+  }
+  .chart-wipe:dir(rtl) {
+    animation-name: wipe-rtl;
+  }
+  .chart-dot {
+    animation: fade-in 400ms ease-out 500ms both;
+  }
+  .chart-slice {
+    animation: fade-in 350ms ease-out both;
+    animation-delay: calc(var(--i, 0) * 70ms);
+  }
+  .step {
+    animation: rise 400ms cubic-bezier(0.2, 0, 0, 1) both;
+    animation-delay: calc(var(--i, 0) * 70ms);
+  }
+}
+
+@keyframes grow-x {
+  from {
+    transform: scaleX(0);
+  }
+}
+@keyframes wipe {
+  from {
+    clip-path: inset(0 100% 0 0);
+  }
+}
+@keyframes wipe-rtl {
+  from {
+    clip-path: inset(0 0 0 100%);
+  }
+}
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}
