@@ -8,7 +8,8 @@ type Options = {
   tools?: boolean;
 };
 
-const toWire = (m: ChatMessage) => {
+// extra_content carries Gemini's thought signatures; other providers reject it.
+const toWire = (m: ChatMessage, extra: boolean) => {
   if (m.role === "tool") {
     return { role: "tool", content: m.content, tool_call_id: m.toolCallId };
   }
@@ -20,7 +21,7 @@ const toWire = (m: ChatMessage) => {
         id: c.id,
         type: "function",
         function: { name: c.name, arguments: c.args },
-        ...(c.extra ? { extra_content: c.extra } : {}),
+        ...(extra && c.extra ? { extra_content: c.extra } : {}),
       })),
     };
   }
@@ -58,7 +59,9 @@ export function openAICompatible({
         },
         body: JSON.stringify({
           model,
-          messages: messages.map(toWire),
+          messages: messages.map((m) =>
+            toWire(m, baseURL.includes("googleapis")),
+          ),
           stream: true,
           ...(offered?.length
             ? {

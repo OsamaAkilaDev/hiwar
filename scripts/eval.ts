@@ -1,5 +1,5 @@
 // Model eval: fixed prompts with automatic checks, run against each candidate.
-// Usage: bun --env-file=.dev.vars scripts/eval.ts [model ...]
+// Usage: bun --env-file=.dev.vars scripts/eval.ts [model ...]  (groq:<model> for Groq)
 // EVAL_CASE=<id> EVAL_RUNS=<n> repeats one case and skips the report.
 // Writes docs/evals/<date>.md. Re-run when providers change their free tiers.
 
@@ -17,6 +17,7 @@ import type { ChatMessage } from "../worker/llm/types";
 import { flattenTools, formatResults } from "../worker/tools/search";
 
 const GEMINI = "https://generativelanguage.googleapis.com/v1beta/openai/";
+const GROQ = "https://api.groq.com/openai/v1/";
 const DEFAULT_MODELS = [
   "gemini-3.5-flash-lite",
   "gemini-3.5-flash",
@@ -234,11 +235,13 @@ type Result = {
 };
 
 async function run(model: string, c: Case): Promise<Result> {
+  const groq = model.startsWith("groq:");
   const provider = openAICompatible({
     name: "eval",
-    baseURL: GEMINI,
-    apiKey: process.env.GEMINI_API_KEY ?? "",
-    model,
+    baseURL: groq ? GROQ : GEMINI,
+    apiKey:
+      (groq ? process.env.GROQ_API_KEY : process.env.GEMINI_API_KEY) ?? "",
+    model: model.replace(/^groq:/, ""),
   });
   const messages: ChatMessage[] = [
     { role: "system", content: systemPrompt(c.locale) },

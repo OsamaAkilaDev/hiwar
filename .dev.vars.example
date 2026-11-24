@@ -1,4 +1,5 @@
 # Copy to .dev.vars (git-ignored). Worker vars for local dev; production uses `wrangler secret put`.
 LLM_PROVIDERS=mock
 GEMINI_API_KEY=
+GROQ_API_KEY=
 TAVILY_API_KEY=

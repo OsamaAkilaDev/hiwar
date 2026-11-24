@@ -33,7 +33,8 @@
     }
   ],
   "vars": {
-    "LLM_PROVIDERS": "gemini",
-    "GEMINI_MODEL": "gemini-3.5-flash-lite"
+    "LLM_PROVIDERS": "gemini,groq",
+    "GEMINI_MODEL": "gemini-3.5-flash-lite",
+    "GROQ_MODEL": "openai/gpt-oss-120b"
   }
 }

@@ -5,9 +5,12 @@ import type { ChatMessage, Provider, Tool, ToolCall } from "./types";
 const GEMINI_BASE_URL =
   "https://generativelanguage.googleapis.com/v1beta/openai/";
 
+const GROQ_BASE_URL = "https://api.groq.com/openai/v1/";
+
 export function providersFromEnv(env: Env): Provider[] {
-  return env.LLM_PROVIDERS.split(",").map((raw) => {
-    const name = raw.trim();
+  const names = env.LLM_PROVIDERS.split(",").map((raw) => raw.trim());
+  // The fallback is optional: without its key, Gemini runs alone.
+  return names.flatMap((name) => {
     switch (name) {
       case "mock":
         return mockProvider();
@@ -19,6 +22,16 @@ export function providersFromEnv(env: Env): Provider[] {
           model: env.GEMINI_MODEL,
           tools: true,
         });
+      case "groq":
+        return env.GROQ_API_KEY
+          ? openAICompatible({
+              name,
+              baseURL: GROQ_BASE_URL,
+              apiKey: env.GROQ_API_KEY,
+              model: env.GROQ_MODEL,
+              tools: true,
+            })
+          : [];
       default:
         throw new Error(`Unknown LLM provider: ${name}`);
     }
