@@ -13,6 +13,7 @@ type Stream = {
 type ChatStore = {
   streams: Record<string, Stream>;
   append: (id: string, text: string) => void;
+  replace: (id: string, text: string) => void;
   setStatus: (id: string, status: MessageDTO["status"]) => void;
   searching: (id: string, query: string) => void;
   cite: (id: string, citations: Citation[]) => void;
@@ -33,6 +34,7 @@ export const useChatStore = create<ChatStore>((set) => {
     streams: {},
     append: (id, text) =>
       patch(id, (s) => ({ text: s.text + text, status: "streaming" })),
+    replace: (id, text) => patch(id, () => ({ text })),
     setStatus: (id, status) => patch(id, () => ({ status })),
     searching: (id, query) => patch(id, () => ({ search: query })),
     cite: (id, citations) =>

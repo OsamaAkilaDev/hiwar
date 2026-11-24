@@ -181,6 +181,13 @@ export const chat = new Hono<{ Bindings: Env }>().post(
               { signal, tools: last ? undefined : [SEARCH_TOOL] },
             )) {
               provider = chunk.provider;
+              if (chunk.reset) {
+                content = content.slice(0, content.length - roundText.length);
+                roundText = "";
+                calls.length = 0;
+                await send({ type: "reset", text: content });
+                continue;
+              }
               if (chunk.toolCall) {
                 calls.push(chunk.toolCall);
                 continue;

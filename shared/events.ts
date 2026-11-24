@@ -76,6 +76,8 @@ const base = { messageId: z.string(), seq: z.number() };
 export const StreamEvent = z.discriminatedUnion("type", [
   z.object({ ...base, type: z.literal("start") }),
   z.object({ ...base, type: z.literal("delta"), text: z.string() }),
+  // A retry replaced the reply so far: `text` is what stays.
+  z.object({ ...base, type: z.literal("reset"), text: z.string() }),
   z.object({
     ...base,
     type: z.literal("tool_start"),

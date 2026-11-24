@@ -50,24 +50,27 @@ test("falls through when first provider exceeds firstTokenTimeoutMs", async () =
   expect(aborted).toBe(true);
 });
 
-test("does not fall through after first token", async () => {
-  const dies = fake("dies", async function* () {
-    yield "part";
-    throw new Error("mid-stream");
-  });
-  const good = fake("good", async function* () {
+test("a stream cut mid-reply is reset and retried, then gives up", async () => {
+  let calls = 0;
+  const flaky = fake("flaky", async function* () {
+    yield `part${++calls}`;
+    if (calls < 3) throw new Error("503 mid-stream");
     yield "ok";
   });
-  const seen: string[] = [];
+  const seen: { text: string; reset?: boolean }[] = [];
   const run = async () => {
-    for await (const { text } of streamChat([dies, good], messages, {
+    for await (const { text, reset } of streamChat([flaky], messages, {
       signal: new AbortController().signal,
-    })) {
-      seen.push(text);
-    }
+    }))
+      seen.push(reset ? { text, reset } : { text });
   };
-  await expect(run()).rejects.toThrow("mid-stream");
-  expect(seen).toEqual(["part"]);
+  // One provider gets two attempts; both die, so the error surfaces.
+  await expect(run()).rejects.toThrow("503 mid-stream");
+  expect(seen).toEqual([
+    { text: "part1" },
+    { text: "", reset: true },
+    { text: "part2" },
+  ]);
 });
 
 test("falls through when first provider ends without a token", async () => {

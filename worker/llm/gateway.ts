@@ -42,14 +42,24 @@ export async function* streamChat(
     firstTokenTimeoutMs = 3000,
     lastProviderTimeoutMs = 15_000,
   }: Options,
-): AsyncGenerator<{ provider: Provider; text: string; toolCall?: ToolCall }> {
+): AsyncGenerator<{
+  provider: Provider;
+  text: string;
+  toolCall?: ToolCall;
+  /** The attempt died mid-reply; drop its text, another one follows. */
+  reset?: boolean;
+}> {
   const failures: string[] = [];
+  // Free tiers drop streams under load (a 503 after a few tokens), usually
+  // for a moment: every provider gets one retry.
+  const attempts = providers.flatMap((p) => [p, p]);
 
-  for (const [i, provider] of providers.entries()) {
-    // A short cutoff only pays off when another provider can take over.
+  for (const [i, provider] of attempts.entries()) {
+    // A short cutoff only pays off when another attempt can take over.
     const timeoutMs =
-      i < providers.length - 1 ? firstTokenTimeoutMs : lastProviderTimeoutMs;
+      i < attempts.length - 1 ? firstTokenTimeoutMs : lastProviderTimeoutMs;
     signal.throwIfAborted();
+    if (failures.length) await new Promise((r) => setTimeout(r, 500));
     const attempt = new AbortController();
     const abort = () => attempt.abort();
     signal.addEventListener("abort", abort, { once: true });
@@ -92,11 +102,16 @@ export async function* streamChat(
           ? { provider, text: r.value }
           : { provider, text: "", toolCall: r.value };
       }
+      return;
+    } catch (error) {
+      if (signal.aborted || i === attempts.length - 1) throw error;
+      failures.push(`${provider.name}: ${errorMessage(error)}`);
+      console.warn(`provider ${provider.name} cut: ${errorMessage(error)}`);
+      yield { provider, text: "", reset: true };
     } finally {
       signal.removeEventListener("abort", abort);
       attempt.abort();
     }
-    return;
   }
 
   throw new Error(`All providers failed. ${failures.join("; ")}`);

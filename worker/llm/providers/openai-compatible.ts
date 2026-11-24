@@ -80,6 +80,7 @@ export function openAICompatible({
         .pipeThrough(new TextDecoderStream())
         .getReader();
       let buffer = "";
+      let tail = "";
       try {
         read: for (;;) {
           const { done, value } = await reader.read();
@@ -87,7 +88,11 @@ export function openAICompatible({
           const lines = buffer.split("\n");
           buffer = lines.pop() ?? "";
           for (const line of lines) {
-            if (!line.startsWith("data: ")) continue;
+            // Gemini sends a mid-stream failure as a bare JSON error body.
+            if (!line.startsWith("data: ")) {
+              if (tail.length < 300) tail += line.trim();
+              continue;
+            }
             const data = line.slice(6).trim();
             if (data === "[DONE]") break read;
             const delta = JSON.parse(data).choices?.[0]?.delta;
@@ -107,7 +112,7 @@ export function openAICompatible({
           }
           // A body that ends without [DONE] was cut (dropped connection,
           // upstream restart): failing here saves it as cut_off, not complete.
-          if (done) throw new Error("stream ended before [DONE]");
+          if (done) throw new Error(`stream ended before [DONE] ${tail}`);
         }
       } finally {
         await reader.cancel().catch(() => {});

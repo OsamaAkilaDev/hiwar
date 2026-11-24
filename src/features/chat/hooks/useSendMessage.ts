@@ -49,7 +49,7 @@ export function useSendMessage(conversationId: string) {
     );
 
   const run = async (user: MessageDTO, assistant: MessageDTO) => {
-    const { append, clear, searching, cite } = useChatStore.getState();
+    const { append, replace, clear, searching, cite } = useChatStore.getState();
     const abort = new AbortController();
     controller.current = abort;
     setStreamingId(assistant.id);
@@ -83,7 +83,10 @@ export function useSendMessage(conversationId: string) {
       let ended = false;
       for await (const event of events) {
         if (event.type === "delta") flusher.push(assistant.id, event.text);
-        else if (event.type === "tool_start") {
+        else if (event.type === "reset") {
+          flusher.flushNow();
+          replace(assistant.id, event.text);
+        } else if (event.type === "tool_start") {
           flusher.flushNow();
           searching(assistant.id, event.query);
         } else if (event.type === "tool_result")
