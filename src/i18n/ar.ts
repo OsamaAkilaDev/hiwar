@@ -9,8 +9,6 @@ export const ar: Record<MessageKey, string> = {
   send: "إرسال",
   stop: "إيقاف الرد",
   thinking: "يفكّر…",
-  loadingWords:
-    "يفكّر|يدوّر|يبني|يرتّب أفكاره|يربط الخيوط|يكتب مسودة|يحلّل|يقلّبها في باله",
   stopped: "توقّف الرد",
   noResponse: "ما وصل رد.",
   offline: "ما في اتصال بالإنترنت.",
@@ -52,18 +50,18 @@ export const ar: Record<MessageKey, string> = {
   "hint.send": "إرسال",
   "hint.newline": "سطر جديد",
   "hint.stop": "إيقاف",
-  "greeting.back": "حيّاك من جديد",
-  "greeting.back.named": "حيّاك من جديد يا {name}",
-  "greeting.morning": "صباح الخير",
-  "greeting.morning.named": "صباح الخير يا {name}",
-  "greeting.afternoon": "مساء الخير",
-  "greeting.afternoon.named": "مساء الخير يا {name}",
-  "greeting.evening": "مساء الخير",
-  "greeting.evening.named": "مساء الخير يا {name}",
-  "greeting.mind": "بماذا تفكّر؟",
-  "greeting.mind.named": "بماذا تفكّر يا {name}؟",
-  "greeting.welcome": "أهلاً من جديد",
-  "greeting.welcome.named": "أهلاً من جديد يا {name}",
+  loadingWords:
+    "يفكّر|يبحث|يبني|يرتّب أفكاره|يربط الخيوط|يكتب مسودة|يحلّل|يقلّب الفكرة|يستنتج|يرسم الفكرة|يجمع القطع|يوازن الخيارات|يرتّب التفاصيل|يتعمّق|يحضّر شيئاً|يجرّب|يصيغ الرد|يستكشف|يلمّع الفكرة|يراجع التفاصيل|يعمل عليها|يبلور الإجابة|يقرأ ما بين السطور|يجمع أفكاره|يحسبها جيداً",
+  "greetings.any":
+    "حيّاك من جديد يا {name}|بماذا تفكّر يا {name}؟|أهلاً من جديد يا {name}|من أين نبدأ يا {name}؟|ماذا سنبني اليوم يا {name}؟|سعيد برؤيتك يا {name}|ما الخطة يا {name}؟|جاهز متى ما كنت جاهزاً يا {name}|اسألني أي شيء يا {name}|ما الذي يشغل بالك يا {name}؟|هيا نبدأ يا {name}|أهلاً يا {name}|عندك سؤال يا {name}؟|ما الخطوة التالية يا {name}؟|لنصنع شيئاً جميلاً يا {name}|أخبرني على ماذا تعمل يا {name}|لنفكّر فيها معاً يا {name}|ما الفكرة اليوم يا {name}؟|أين توقفنا يا {name}؟|كلّي آذان صاغية يا {name}",
+  "greetings.morning":
+    "صباح الخير يا {name}|صباح النور يا {name}|صباحك سعيد يا {name}|يوم جديد وأفكار جديدة يا {name}؟|بداية مبكرة يا {name}؟",
+  "greetings.afternoon":
+    "مساء الخير يا {name}|كيف يمضي يومك يا {name}؟|نصف اليوم مضى يا {name}، ماذا بعد؟|أهلاً بك في منتصف اليوم يا {name}",
+  "greetings.evening":
+    "مساء الخير يا {name}|مساء النور يا {name}|مساؤك سعيد يا {name}|شيء أخير قبل نهاية اليوم يا {name}؟",
+  "greetings.night":
+    "ما زلت مستيقظاً يا {name}؟|سهرة عمل يا {name}؟|فكرة آخر الليل يا {name}؟|الليل هادئ يا {name}، بماذا تفكّر؟",
   you: "أنت",
   "settings.appearance": "المظهر",
   "settings.data": "البيانات",

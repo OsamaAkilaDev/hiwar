@@ -5,8 +5,6 @@ export const en = {
   send: "Send message",
   stop: "Stop reply",
   thinking: "Thinking",
-  loadingWords:
-    "Thinking|Searching|Building|Brainstorming|Connecting the dots|Drafting|Untangling|Mulling it over",
   stopped: "Stopped",
   noResponse: "No response.",
   offline: "You're offline.",
@@ -50,18 +48,18 @@ export const en = {
   "hint.send": "send",
   "hint.newline": "new line",
   "hint.stop": "stop",
-  "greeting.back": "Back at it",
-  "greeting.back.named": "Back at it, {name}",
-  "greeting.morning": "Good morning",
-  "greeting.morning.named": "Good morning, {name}",
-  "greeting.afternoon": "Good afternoon",
-  "greeting.afternoon.named": "Good afternoon, {name}",
-  "greeting.evening": "Good evening",
-  "greeting.evening.named": "Good evening, {name}",
-  "greeting.mind": "What's on your mind?",
-  "greeting.mind.named": "What's on your mind, {name}?",
-  "greeting.welcome": "Welcome back",
-  "greeting.welcome.named": "Welcome back, {name}",
+  loadingWords:
+    "Thinking|Searching|Building|Brainstorming|Connecting the dots|Drafting|Untangling|Mulling it over|Reasoning|Sketching|Piecing it together|Weighing options|Sorting it out|Digging in|Cooking something up|Tinkering|Composing|Exploring|Polishing|Checking the details|Lining things up|Working it out|Shaping an answer|Reading between the lines|Gathering thoughts",
+  "greetings.any":
+    "Back at it, {name}|What's on your mind, {name}?|Welcome back, {name}|Where should we start, {name}?|What are we building today, {name}?|Good to see you, {name}|What's the plan, {name}?|Ready when you are, {name}|Ask me anything, {name}|What are you curious about, {name}?|Let's get into it, {name}|Hey there, {name}|What can I untangle for you, {name}?|Got a question, {name}?|What's next, {name}?|Let's make something, {name}|Tell me what you're working on, {name}|Let's think it through, {name}|What's the idea today, {name}?|Where were we, {name}?",
+  "greetings.morning":
+    "Good morning, {name}|Morning, {name}|Fresh start, {name}|New day, new ideas, {name}?|Early start, {name}?",
+  "greetings.afternoon":
+    "Good afternoon, {name}|Afternoon, {name}|How's the day going, {name}?|Halfway through the day, {name}",
+  "greetings.evening":
+    "Good evening, {name}|Evening, {name}|Winding down, {name}?|One more thing before the day ends, {name}?",
+  "greetings.night":
+    "Up late, {name}?|Burning the midnight oil, {name}?|Night owl mode, {name}|Still going, {name}?",
   you: "You",
   "settings.appearance": "Appearance",
   "settings.data": "Data",
