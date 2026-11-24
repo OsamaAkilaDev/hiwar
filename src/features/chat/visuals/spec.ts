@@ -58,3 +58,11 @@ export function parseSpec<T>(schema: z.ZodMiniType<T>, code: string): T | null {
     return null;
   }
 }
+
+/** Models sometimes tag a visual spec as json; a closed fence that is exactly
+ * a stepper, or a chart naming its kind, renders as that visual. */
+export function visualOfJson(code: string): "chart" | "stepper" | undefined {
+  if (parseSpec(StepperSpec, code)) return "stepper";
+  if (/"kind"\s*:/.test(code) && parseSpec(ChartSpec, code)) return "chart";
+  return undefined;
+}

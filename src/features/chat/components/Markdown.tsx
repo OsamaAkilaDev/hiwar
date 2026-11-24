@@ -6,7 +6,12 @@ import { useT } from "../../../i18n";
 import { type Citation, linkCitations } from "../../../lib/citations";
 import { dirOf, dirProps } from "../../../lib/dir";
 import { hasMath, normalizeMath } from "../../../lib/math";
-import { isClosedFence, isVisualLang, type VisualLang } from "../visuals/spec";
+import {
+  isClosedFence,
+  isVisualLang,
+  type VisualLang,
+  visualOfJson,
+} from "../visuals/spec";
 import { Visual } from "../visuals/Visual";
 import { CopyButton } from "./CopyButton";
 
@@ -123,13 +128,14 @@ export const Markdown = memo(function Markdown({
           const info = String(token.lang ?? "").trim();
           const lang = info.split(/\s/)[0]?.toLowerCase() ?? "";
           const inline = info.slice(lang.length).trim();
-          return isVisualLang(lang)
-            ? {
-                kind: "visual",
-                raw: token.raw,
-                lang,
-                code: inline ? `${inline}\n${token.text}` : token.text,
-              }
+          const code = inline ? `${inline}\n${token.text}` : token.text;
+          const visual = isVisualLang(lang)
+            ? lang
+            : lang === "json" && isClosedFence(token.raw)
+              ? visualOfJson(code)
+              : undefined;
+          return visual
+            ? { kind: "visual", raw: token.raw, lang: visual, code }
             : { kind: "md", raw: token.raw };
         }),
     [text, citations],

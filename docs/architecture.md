@@ -297,7 +297,7 @@ flowchart TD; A-->B
 
 ## 15. Open decisions
 
-- Primary model for each lane, decided after the Arabic eval.
+- Primary model for each lane: decided 2026-11-24 by the eval (scripts/eval.ts, docs/evals/). gemini-3.5-flash-lite for every lane: 11/11 at ~0.65s to first token. gemini-3.5-flash matched it on quality at ~12s per reply and twice returned an empty Arabic chart reply; gemini-3.8-flash had no free quota; gemma-4-31b-it leaked its reasoning into replies and was mostly unavailable. Re-run when free tiers change.
 - Postgres hosting: native, or a free hosted option.
 - Auth: start single-user, or add login from the beginning.
 - Whether to persist the Query cache to IndexedDB in the first version.
