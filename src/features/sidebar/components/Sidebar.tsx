@@ -220,7 +220,7 @@ export function Sidebar({ onNavigate, onCollapse, onOpenSettings }: Props) {
           >
             {Array.from(label)[0]?.toUpperCase()}
           </span>
-          <span className="text-trim truncate py-px">{label}</span>
+          <span className="truncate">{label}</span>
         </button>
       </div>
       <ConfirmDialog

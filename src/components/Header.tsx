@@ -2,6 +2,7 @@ import { NotePencilIcon, SidebarSimpleIcon } from "@phosphor-icons/react";
 import { Link, useParams } from "@tanstack/react-router";
 import { useConversations } from "../features/sidebar/hooks/useConversations";
 import { useT } from "../i18n";
+import { usePrefs } from "../lib/prefs";
 
 const iconButton =
   "grid size-8.5 shrink-0 place-items-center rounded-[0.65rem] text-muted hover:bg-surface-2 hover:text-fg";
@@ -13,6 +14,7 @@ export function Header({ sidebarOpen, onToggleSidebar }: Props) {
   const { conversationId } = useParams({ strict: false });
   const { conversations } = useConversations();
   const title = conversations.find((c) => c.id === conversationId)?.title;
+  const rtlUI = usePrefs((s) => s.locale) === "ar";
 
   return (
     <header className="sticky top-0 z-20 flex min-h-[calc(3.5rem+env(safe-area-inset-top))] items-center gap-1.5 border-line/60 border-b bg-glass pt-[env(safe-area-inset-top)] pr-[max(1rem,env(safe-area-inset-right))] pl-[max(1rem,env(safe-area-inset-left))] backdrop-blur-[18px] backdrop-saturate-150">
@@ -28,7 +30,8 @@ export function Header({ sidebarOpen, onToggleSidebar }: Props) {
       </button>
       <p
         dir="auto"
-        className="text-trim min-w-0 flex-1 truncate px-1.5 py-px font-medium text-sm"
+        className="min-w-0 flex-1 truncate px-1.5 font-medium text-sm"
+        style={{ textAlign: rtlUI ? "right" : "left" }}
       >
         {title ?? t("newChat")}
       </p>
