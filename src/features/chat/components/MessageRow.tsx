@@ -1,5 +1,5 @@
 import { ArrowClockwiseIcon } from "@phosphor-icons/react";
-import { memo, type ReactNode, useEffect, useState } from "react";
+import { memo, type ReactNode } from "react";
 import type { MessageDTO } from "../../../../shared/events";
 import { Mark } from "../../../components/Mark";
 import { useT } from "../../../i18n";
@@ -64,7 +64,6 @@ export const MessageRow = memo(function MessageRow({
         <div {...(text ? dirProps(text) : {})}>
           {text ? <Markdown text={text} /> : null}
         </div>
-        {status === "streaming" && live && !text ? <Thinking /> : null}
         {stopped ? (
           <Note>
             {t("stopped")}
@@ -146,30 +145,5 @@ export function RetryButton({ onRetry }: { onRetry?: () => void }) {
       <ArrowClockwiseIcon className="size-3.5" aria-hidden />
       {t("retry")}
     </button>
-  );
-}
-
-const FRAMES = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"];
-
-function Thinking() {
-  const t = useT();
-  const [frame, setFrame] = useState(0);
-
-  useEffect(() => {
-    if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    const id = setInterval(() => setFrame((f) => (f + 1) % FRAMES.length), 80);
-    return () => clearInterval(id);
-  }, []);
-
-  return (
-    <div
-      aria-hidden
-      className="flex items-center gap-3 py-1 text-muted text-sm"
-    >
-      <span className="min-w-[1ch] font-mono text-[1.25rem] text-accent-text leading-none">
-        {FRAMES[frame]}
-      </span>
-      {t("thinking")}
-    </div>
   );
 }
