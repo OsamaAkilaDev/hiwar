@@ -45,7 +45,6 @@ export const ar: Record<MessageKey, string> = {
   noMatches: "ما في نتائج",
   hideSidebar: "إخفاء الشريط الجانبي",
   settings: "الإعدادات",
-  model: "الموديل",
   copy: "نسخ",
   copied: "تم النسخ",
   copyCode: "نسخ الكود",

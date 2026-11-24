@@ -92,13 +92,9 @@ function Conversation({ conversationId }: { conversationId: string }) {
     );
   }, [streamingId, messages, t]);
 
-  const model = messages.findLast(
-    (m) => m.role === "assistant" && m.model,
-  )?.model;
   const composer = (
     <Composer
       intro={messages.length === 0}
-      model={model ?? undefined}
       isStreaming={isStreaming}
       onSend={send}
       onStop={stop}

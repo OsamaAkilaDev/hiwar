@@ -1,5 +1,8 @@
 import { extractPrompt } from "../prompts/extract-memory";
 import { titlePrompt } from "../prompts/title";
+
+const TITLE_PROMPT_START = titlePrompt("en").slice(0, 20);
+
 import type { ChatMessage, Provider, Tool } from "../types";
 
 const CHUNK_SIZE = 8;
@@ -75,7 +78,7 @@ export function mockProvider(): Provider {
       tools?: Tool[],
     ) {
       const last = messages.findLast((m) => m.role === "user")?.content;
-      if (messages[0]?.content === titlePrompt()) {
+      if (messages[0]?.content?.startsWith(TITLE_PROMPT_START)) {
         yield /[؀-ۿ]/.test(last ?? "")
           ? "شرح أساسيات React"
           : "Explaining React basics";

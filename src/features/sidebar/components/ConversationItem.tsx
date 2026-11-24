@@ -3,6 +3,7 @@ import { Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import type { ConversationDTO } from "../../../../shared/events";
 import { useT } from "../../../i18n";
+import { usePrefs } from "../../../lib/prefs";
 
 type Props = {
   conversation: ConversationDTO;
@@ -32,6 +33,7 @@ export function ConversationItem({
   const cancelled = useRef(false);
   const wasEditing = useRef(false);
   const label = title ?? t("newChat");
+  const rtlUI = usePrefs((s) => s.locale) === "ar";
 
   useEffect(() => {
     if (editing) {
@@ -75,9 +77,16 @@ export function ConversationItem({
             title={label}
             aria-current={active ? "page" : undefined}
             onClick={onNavigate}
-            className={`relative block h-[34px] truncate rounded-[0.65rem] py-1.5 ps-3.5 pe-18 text-[0.9rem] leading-[22px] hover:bg-surface-2 hover:text-fg ${active ? "bg-surface text-fg shadow-[inset_0_0_0_1px_var(--line)] before:absolute before:inset-y-2.5 before:start-1 before:w-[3px] before:rounded-full before:bg-accent" : "text-muted"}`}
+            className={`relative block h-[34px] rounded-[0.65rem] py-1.5 ps-3.5 text-[0.9rem] leading-[22px] hover:bg-surface-2 hover:text-fg ${active ? "pe-18 bg-surface text-fg shadow-[inset_0_0_0_1px_var(--line)] before:absolute before:inset-y-2.5 before:start-1 before:w-[3px] before:rounded-full before:bg-accent" : "pe-3 text-muted group-focus-within:pe-18 group-hover:pe-18 pointer-coarse:pe-18"}`}
           >
-            {label}
+            {/* Truncates at the title's own end (dir auto), lined up with the UI. */}
+            <span
+              dir="auto"
+              className="block truncate"
+              style={{ textAlign: rtlUI ? "right" : "left" }}
+            >
+              {label}
+            </span>
           </Link>
           <div
             className={`absolute inset-y-0 end-1 flex items-center gap-0.5 group-focus-within:opacity-100 group-hover:opacity-100 pointer-coarse:opacity-100 ${active ? "opacity-100" : "opacity-0"}`}

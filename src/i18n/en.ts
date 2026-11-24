@@ -43,7 +43,6 @@ export const en = {
   noMatches: "No matches",
   hideSidebar: "Hide sidebar",
   settings: "Settings",
-  model: "Model",
   copy: "Copy",
   copied: "Copied",
   copyCode: "Copy code",

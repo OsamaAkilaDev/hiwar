@@ -12,13 +12,12 @@ import { useT } from "../../../i18n";
 type Props = {
   /** Stagger the composer in on mount (empty state). */
   intro?: boolean;
-  model?: string;
   isStreaming: boolean;
   onSend: (text: string) => void;
   onStop: () => void;
 };
 
-export function Composer({ intro, model, isStreaming, onSend, onStop }: Props) {
+export function Composer({ intro, isStreaming, onSend, onStop }: Props) {
   const t = useT();
   const [text, setText] = useState("");
   const input = useRef<HTMLTextAreaElement>(null);
@@ -118,7 +117,7 @@ export function Composer({ intro, model, isStreaming, onSend, onStop }: Props) {
         </div>
       </form>
       <div
-        className={`mt-2 flex items-center gap-4 text-subtle text-xs ${model ? "" : "justify-center"} ${intro ? "enter [--i:2]" : ""}`}
+        className={`mt-2 flex items-center gap-4 justify-center text-subtle text-xs ${intro ? "enter [--i:2]" : ""}`}
       >
         <p className="hidden gap-4 pointer-fine:flex">
           <span>
@@ -131,15 +130,6 @@ export function Composer({ intro, model, isStreaming, onSend, onStop }: Props) {
             <Kbd>Esc</Kbd> {t("hint.stop")}
           </span>
         </p>
-        {model && (
-          <span
-            dir="ltr"
-            title={t("model")}
-            className="ms-auto truncate font-mono"
-          >
-            {model}
-          </span>
-        )}
       </div>
     </>
   );

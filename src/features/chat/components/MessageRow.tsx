@@ -10,6 +10,14 @@ import { CopyButton } from "./CopyButton";
 import { Markdown } from "./Markdown";
 import { Note, RetryButton } from "./Note";
 
+// Readable names for the models the gateway can use; unknown ids show as is.
+const MODEL_NAMES: Record<string, string> = {
+  "gemini-3.5-flash-lite": "Gemini 3.5 Flash-Lite",
+  "gemini-3.5-flash": "Gemini 3.5 Flash",
+  "openai/gpt-oss-120b": "GPT-OSS 120B",
+};
+const modelName = (id: string) => MODEL_NAMES[id] ?? id;
+
 type Props = {
   message: MessageDTO;
   live: boolean;
@@ -94,24 +102,26 @@ export const MessageRow = memo(function MessageRow({
           </Note>
         ) : null}
         {status === "complete" && text ? (
-          <div className="mt-2.5 flex items-center gap-1 text-subtle text-xs opacity-0 transition-opacity focus-within:opacity-100 group-hover:opacity-100 pointer-coarse:opacity-100">
+          <div className="mt-2.5 flex items-center gap-1 text-subtle text-xs">
             {message.model ? (
-              <span dir="ltr" className="me-2 font-mono">
-                {message.model}
+              <span dir="ltr" className="me-1.5">
+                {modelName(message.model)}
               </span>
             ) : null}
-            <CopyButton text={text} className="size-7 rounded-lg" />
-            {onRetry ? (
-              <button
-                type="button"
-                aria-label={t("regenerate")}
-                title={t("regenerate")}
-                onClick={onRetry}
-                className="grid size-7 place-items-center rounded-lg hover:bg-surface-2 hover:text-fg"
-              >
-                <ArrowClockwiseIcon className="size-4" aria-hidden />
-              </button>
-            ) : null}
+            <div className="flex items-center gap-1 opacity-0 transition-opacity focus-within:opacity-100 group-hover:opacity-100 pointer-coarse:opacity-100">
+              <CopyButton text={text} className="size-7 rounded-lg" />
+              {onRetry ? (
+                <button
+                  type="button"
+                  aria-label={t("regenerate")}
+                  title={t("regenerate")}
+                  onClick={onRetry}
+                  className="grid size-7 place-items-center rounded-lg hover:bg-surface-2 hover:text-fg"
+                >
+                  <ArrowClockwiseIcon className="size-4" aria-hidden />
+                </button>
+              ) : null}
+            </div>
           </div>
         ) : null}
       </div>

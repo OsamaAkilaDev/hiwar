@@ -14,7 +14,7 @@ import {
 import { withRetry } from "../db/retry";
 import { SEED_USER_ID } from "../db/schema";
 import { providersFromEnv, streamChat } from "../llm/gateway";
-import { systemPrompt } from "../llm/prompts/system";
+import { LAST_WORD, systemPrompt } from "../llm/prompts/system";
 import { generateTitle } from "../llm/title";
 import type { ChatMessage, Provider, ToolCall } from "../llm/types";
 import { extractMemories } from "../memory/extract";
@@ -101,7 +101,9 @@ export const chat = new Hono<{ Bindings: Env }>().post(
 
         let history: ChatMessage[];
         let known: Context = { facts: [], memories: [] };
-        let wantsTitle = false;
+        // Untitled chats (a title call that failed, say while the model was
+        // down) try again on every turn, from the chat's first question.
+        let titleFrom: string | null = null;
         try {
           const [existing, recent, conversation, context] = await withRetry(
             () =>
@@ -117,9 +119,9 @@ export const chat = new Hono<{ Bindings: Env }>().post(
             return;
           }
           known = context;
-          wantsTitle =
-            !conversation?.title &&
-            recent.filter((m) => m.role === "user").length === 1;
+          titleFrom = conversation?.title
+            ? null
+            : (recent.find((m) => m.role === "user")?.content ?? text);
           history = recent
             .filter(
               (m) =>
@@ -145,8 +147,8 @@ export const chat = new Hono<{ Bindings: Env }>().post(
 
         const providers = providersFromEnv(c.env);
         const titleAbort = new AbortController();
-        const title = wantsTitle
-          ? generateTitle(providers, text, titleAbort.signal)
+        const title = titleFrom
+          ? generateTitle(providers, titleFrom, titleAbort.signal)
           : null;
 
         let content = "";
@@ -164,6 +166,7 @@ export const chat = new Hono<{ Bindings: Env }>().post(
             }),
           },
           ...history,
+          { role: "system", content: LAST_WORD },
         ];
         let searches = 0;
 

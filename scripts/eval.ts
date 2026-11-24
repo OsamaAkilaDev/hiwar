@@ -11,7 +11,7 @@ import {
   StepperSpec,
   visualOfJson,
 } from "../src/features/chat/visuals/spec";
-import { systemPrompt } from "../worker/llm/prompts/system";
+import { LAST_WORD, systemPrompt } from "../worker/llm/prompts/system";
 import { openAICompatible } from "../worker/llm/providers/openai-compatible";
 import type { ChatMessage } from "../worker/llm/types";
 import { flattenTools, formatResults } from "../worker/tools/search";
@@ -151,7 +151,12 @@ const CASES: Case[] = [
     thread: [
       user("Walk me through setting up SSH keys for GitHub, step by step."),
     ],
-    checks: [isEnglish, visual("stepper")],
+    // Steps are a numbered list; the stepper is only for an asked-for walkthrough.
+    checks: [
+      isEnglish,
+      noVisual,
+      ["numbered list", (r) => /^\s*1\.\s/m.test(r)],
+    ],
   },
   {
     id: "math-ar",
@@ -161,6 +166,42 @@ const CASES: Case[] = [
     checks: [
       isArabic,
       ["latex", (r) => /\$\$[\s\S]+\$\$|\$[^$\n]+\$|\\\(|\\\[/.test(r)],
+    ],
+  },
+  {
+    // Explaining an idea, even a mathematical one, is prose, not a diagram.
+    id: "proof-ar",
+    lane: "visual",
+    locale: "ar",
+    thread: [user("اشرحلي برهان قانون فيثاغورس")],
+    checks: [isArabic, noVisual],
+  },
+  {
+    id: "define-en",
+    lane: "visual",
+    locale: "en",
+    thread: [user("What is React?")],
+    checks: [isEnglish, noVisual],
+  },
+  {
+    id: "advice-ar",
+    lane: "visual",
+    locale: "ar",
+    thread: [user("كيف أركز أكثر وأنا أذاكر؟")],
+    checks: [isArabic, noVisual],
+  },
+  {
+    id: "arch-en",
+    lane: "visual",
+    locale: "en",
+    thread: [
+      user(
+        "How does a request flow through a CDN, load balancer, app servers, a Redis cache and Postgres?",
+      ),
+    ],
+    checks: [
+      isEnglish,
+      ["mermaid", (r) => fences(r).some((f) => f.lang === "mermaid")],
     ],
   },
   {
@@ -246,6 +287,7 @@ async function run(model: string, c: Case): Promise<Result> {
   const messages: ChatMessage[] = [
     { role: "system", content: systemPrompt(c.locale) },
     ...c.thread,
+    { role: "system", content: LAST_WORD },
   ];
   for (let attempt = 0; ; attempt++) {
     const start = performance.now();

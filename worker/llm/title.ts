@@ -1,3 +1,4 @@
+import { langOf } from "../../shared/lang";
 import { streamChat } from "./gateway";
 import { titlePrompt } from "./prompts/title";
 import type { Provider } from "./types";
@@ -32,7 +33,7 @@ export async function generateTitle(
     for await (const chunk of streamChat(
       providers,
       [
-        { role: "system", content: titlePrompt() },
+        { role: "system", content: titlePrompt(langOf(firstUserText)) },
         { role: "user", content: firstUserText },
       ],
       { signal },
