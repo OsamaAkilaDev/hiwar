@@ -469,3 +469,11 @@
     animation-delay: calc(var(--i) * 70ms);
   }
 }
+
+/* Typing caret beside the rotating loading words. */
+.typing-caret::after {
+  content: "\258D";
+  color: var(--accent-text);
+  margin-inline-start: 1px;
+  animation: blink 1s steps(1) infinite;
+}

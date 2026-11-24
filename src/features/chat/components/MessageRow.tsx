@@ -1,5 +1,5 @@
 import { ArrowClockwiseIcon } from "@phosphor-icons/react";
-import { memo, type ReactNode } from "react";
+import { memo, type ReactNode, useEffect, useState } from "react";
 import type { MessageDTO } from "../../../../shared/events";
 import { Mark } from "../../../components/Mark";
 import { useT } from "../../../i18n";
@@ -64,6 +64,7 @@ export const MessageRow = memo(function MessageRow({
         <div {...(text ? dirProps(text) : {})}>
           {text ? <Markdown text={text} /> : null}
         </div>
+        {status === "streaming" && live && !text ? <LoadingWords /> : null}
         {stopped ? (
           <Note>
             {t("stopped")}
@@ -145,5 +146,65 @@ export function RetryButton({ onRetry }: { onRetry?: () => void }) {
       <ArrowClockwiseIcon className="size-3.5" aria-hidden />
       {t("retry")}
     </button>
+  );
+}
+
+const graphemes = (word: string) =>
+  Array.from(new Intl.Segmenter().segment(word), (g) => g.segment);
+
+const TYPE_MS = 45;
+const DELETE_MS = 25;
+const HOLD_MS = 1500;
+
+/** Rotates loading words, deleting and retyping each one like a cursor would. */
+function LoadingWords() {
+  const t = useT();
+
+  const key = t("loadingWords");
+  const [shown, setShown] = useState("");
+
+  useEffect(() => {
+    const list = key.split("|");
+    const pick = (not?: string) => {
+      const pool = list.filter((w) => w !== not);
+      return pool[Math.floor(Math.random() * pool.length)] ?? list[0] ?? "";
+    };
+    let alive = true;
+    let timer: ReturnType<typeof setTimeout>;
+    const wait = (ms: number) =>
+      new Promise<void>((done) => {
+        timer = setTimeout(done, ms);
+      });
+    const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    (async () => {
+      let word = pick();
+      while (alive) {
+        const chars = graphemes(word);
+        if (still) setShown(word);
+        else
+          for (let i = 1; i <= chars.length && alive; i++) {
+            setShown(chars.slice(0, i).join(""));
+            await wait(TYPE_MS);
+          }
+        await wait(HOLD_MS);
+        if (!still)
+          for (let i = chars.length - 1; i >= 0 && alive; i--) {
+            setShown(chars.slice(0, i).join(""));
+            await wait(DELETE_MS);
+          }
+        word = pick(word);
+      }
+    })();
+    return () => {
+      alive = false;
+      clearTimeout(timer);
+    };
+  }, [key]);
+
+  return (
+    <div aria-hidden className="typing-caret py-1 text-muted text-sm">
+      {shown}
+    </div>
   );
 }

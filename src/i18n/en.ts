@@ -5,6 +5,8 @@ export const en = {
   send: "Send message",
   stop: "Stop reply",
   thinking: "Thinking",
+  loadingWords:
+    "Thinking|Searching|Building|Brainstorming|Connecting the dots|Drafting|Untangling|Mulling it over",
   stopped: "Stopped",
   noResponse: "No response.",
   offline: "You're offline.",

@@ -9,6 +9,8 @@ export const ar: Record<MessageKey, string> = {
   send: "إرسال",
   stop: "إيقاف الرد",
   thinking: "يفكّر…",
+  loadingWords:
+    "يفكّر|يدوّر|يبني|يرتّب أفكاره|يربط الخيوط|يكتب مسودة|يحلّل|يقلّبها في باله",
   stopped: "توقّف الرد",
   noResponse: "ما وصل رد.",
   offline: "ما في اتصال بالإنترنت.",
