@@ -105,7 +105,9 @@ export function openAICompatible({
               if (part.extra_content) call.extra = part.extra_content;
             }
           }
-          if (done) break;
+          // A body that ends without [DONE] was cut (dropped connection,
+          // upstream restart): failing here saves it as cut_off, not complete.
+          if (done) throw new Error("stream ended before [DONE]");
         }
       } finally {
         await reader.cancel().catch(() => {});

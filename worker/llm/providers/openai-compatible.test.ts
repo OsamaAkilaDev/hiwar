@@ -98,3 +98,8 @@ test("assembles a tool call split across chunks and keeps its signature", async 
     },
   ]);
 });
+
+test("a stream that ends without [DONE] is an error, not a short answer", async () => {
+  stubFetch(sse('data: {"choices":[{"delta":{"content":"Half an ans"}}]}\n\n'));
+  await expect(collect()).rejects.toThrow(/before \[DONE\]/);
+});
