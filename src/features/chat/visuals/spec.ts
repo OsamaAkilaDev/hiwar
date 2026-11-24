@@ -1,4 +1,6 @@
-import { z } from "zod";
+// zod/mini: the same validation as zod, tree-shaken to a few KB. These specs
+// are written by the model, so they are checked before rendering.
+import * as z from "zod/mini";
 
 export const VISUAL_LANGS = ["chart", "mermaid", "stepper", "html"] as const;
 export type VisualLang = (typeof VISUAL_LANGS)[number];
@@ -13,41 +15,42 @@ export const isClosedFence = (raw: string) => {
   return lines.length > 1 && /^\s*(`{3,}|~{3,})\s*$/.test(lines.at(-1) ?? "");
 };
 
+const text = (max: number) => z.string().check(z.maxLength(max));
+
 export const ChartSpec = z.object({
-  kind: z.preprocess(
-    (v) => (v === "pie" ? "donut" : v),
-    z.enum(["bar", "line", "donut"]).catch("bar"),
+  kind: z.pipe(
+    z.transform((v: unknown) => (v === "pie" ? "donut" : v)),
+    z.catch(z.enum(["bar", "line", "donut"]), "bar"),
   ),
-  title: z.string().max(120).optional(),
-  unit: z.string().max(12).optional(),
+  title: z.optional(text(120)),
+  unit: z.optional(text(12)),
   data: z
     .array(
       z.object({
-        label: z.coerce.string().max(60),
-        value: z.coerce.number().finite(),
+        label: z.coerce.string().check(z.maxLength(60)),
+        // z.number() already rejects NaN and Infinity.
+        value: z.coerce.number(),
       }),
     )
-    .min(1)
-    .max(24),
+    .check(z.minLength(1), z.maxLength(24)),
 });
 export type ChartSpec = z.infer<typeof ChartSpec>;
 
 export const StepperSpec = z.object({
-  title: z.string().max(120).optional(),
+  title: z.optional(text(120)),
   steps: z
     .array(
       z.object({
-        title: z.string().min(1).max(120),
-        body: z.string().max(600).optional(),
+        title: z.string().check(z.minLength(1), z.maxLength(120)),
+        body: z.optional(text(600)),
       }),
     )
-    .min(1)
-    .max(12),
+    .check(z.minLength(1), z.maxLength(12)),
 });
 export type StepperSpec = z.infer<typeof StepperSpec>;
 
 /** Parses a JSON visual spec; anything malformed is null (shown as code). */
-export function parseSpec<T>(schema: z.ZodType<T>, code: string): T | null {
+export function parseSpec<T>(schema: z.ZodMiniType<T>, code: string): T | null {
   try {
     const result = schema.safeParse(JSON.parse(code));
     return result.success ? result.data : null;

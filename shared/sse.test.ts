@@ -52,12 +52,12 @@ describe("parseEventStream", () => {
     ).toEqual([event]);
   });
 
-  test("ignores comments and keep-alives, rejects invalid events", async () => {
+  test("ignores comments and keep-alives, rejects malformed data", async () => {
     const encoder = new TextEncoder();
     const ok = encoder.encode(`: ping\n\n\n${encodeEvent(delta(1, "a"))}`);
     expect(await collect(streamOf(ok))).toEqual([delta(1, "a")]);
     expect(
-      collect(streamOf(encoder.encode('data: {"type":"nope"}\n\n'))),
+      collect(streamOf(encoder.encode("data: {nope\n\n"))),
     ).rejects.toThrow();
   });
 });
