@@ -1,6 +1,6 @@
 import { mockProvider } from "./providers/mock";
 import { openAICompatible } from "./providers/openai-compatible";
-import type { ChatMessage, Provider } from "./types";
+import type { ChatMessage, Provider, Tool, ToolCall } from "./types";
 
 const GEMINI_BASE_URL =
   "https://generativelanguage.googleapis.com/v1beta/openai/";
@@ -17,6 +17,7 @@ export function providersFromEnv(env: Env): Provider[] {
           baseURL: GEMINI_BASE_URL,
           apiKey: env.GEMINI_API_KEY,
           model: env.GEMINI_MODEL,
+          tools: true,
         });
       default:
         throw new Error(`Unknown LLM provider: ${name}`);
@@ -26,6 +27,8 @@ export function providersFromEnv(env: Env): Provider[] {
 
 type Options = {
   signal: AbortSignal;
+  /** Offered only to providers whose capability flag says tools work. */
+  tools?: Tool[];
   firstTokenTimeoutMs?: number;
   lastProviderTimeoutMs?: number;
 };
@@ -35,10 +38,11 @@ export async function* streamChat(
   messages: ChatMessage[],
   {
     signal,
+    tools,
     firstTokenTimeoutMs = 3000,
     lastProviderTimeoutMs = 15_000,
   }: Options,
-): AsyncGenerator<{ provider: Provider; text: string }> {
+): AsyncGenerator<{ provider: Provider; text: string; toolCall?: ToolCall }> {
   const failures: string[] = [];
 
   for (const [i, provider] of providers.entries()) {
@@ -50,10 +54,10 @@ export async function* streamChat(
     const abort = () => attempt.abort();
     signal.addEventListener("abort", abort, { once: true });
     const iterator = provider
-      .stream(messages, attempt.signal)
+      .stream(messages, attempt.signal, provider.tools ? tools : undefined)
       [Symbol.asyncIterator]();
 
-    let first: IteratorResult<string>;
+    let first: IteratorResult<string | ToolCall>;
     let timer: ReturnType<typeof setTimeout> | null = null;
     try {
       const timeout = new Promise<never>((_, reject) => {
@@ -80,11 +84,13 @@ export async function* streamChat(
 
     try {
       for (
-        let r: IteratorResult<string> = first;
+        let r: IteratorResult<string | ToolCall> = first;
         !r.done;
         r = await iterator.next()
       ) {
-        yield { provider, text: r.value };
+        yield typeof r.value === "string"
+          ? { provider, text: r.value }
+          : { provider, text: "", toolCall: r.value };
       }
     } finally {
       signal.removeEventListener("abort", abort);

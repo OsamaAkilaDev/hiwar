@@ -1,6 +1,6 @@
 import { extractPrompt } from "../prompts/extract-memory";
 import { titlePrompt } from "../prompts/title";
-import type { ChatMessage, Provider } from "../types";
+import type { ChatMessage, Provider, Tool } from "../types";
 
 const CHUNK_SIZE = 8;
 const CHUNK_DELAY_MS = 30;
@@ -44,7 +44,12 @@ export function mockProvider(): Provider {
   return {
     name: "mock",
     model: "mock",
-    async *stream(messages: ChatMessage[], signal: AbortSignal) {
+    tools: true,
+    async *stream(
+      messages: ChatMessage[],
+      signal: AbortSignal,
+      tools?: Tool[],
+    ) {
       const last = messages.findLast((m) => m.role === "user")?.content;
       if (messages[0]?.content === titlePrompt()) {
         yield /[؀-ۿ]/.test(last ?? "")
@@ -54,6 +59,20 @@ export function mockProvider(): Provider {
       }
       if (messages[0]?.content === extractPrompt()) {
         yield EXTRACTION;
+        return;
+      }
+      // Any message mentioning "search" asks for one search before answering.
+      const searched = messages.some((m) => m.role === "tool");
+      if (
+        tools?.length &&
+        !searched &&
+        last?.toLowerCase().includes("search")
+      ) {
+        yield {
+          id: "call_mock",
+          name: "web_search",
+          args: JSON.stringify({ query: last }),
+        };
         return;
       }
       if (last === "/fail") throw new Error("mock failure");

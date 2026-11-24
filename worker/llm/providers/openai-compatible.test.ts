@@ -77,3 +77,24 @@ describe("openAICompatible", () => {
     expect(init.signal).toBe(signal);
   });
 });
+
+test("assembles a tool call split across chunks and keeps its signature", async () => {
+  stubFetch(
+    sse(
+      'data: {"choices":[{"delta":{"tool_calls":[{"index":0,"id":"c1","function":{"name":"web_search","arguments":"{\\"que"}}]}}]}\n\n',
+      'data: {"choices":[{"delta":{"tool_calls":[{"index":0,"function":{"arguments":"ry\\":\\"gold\\"}"},"extra_content":{"google":{"thought_signature":"s"}}}]}}]}\n\n',
+      "data: [DONE]\n\n",
+    ),
+  );
+  const out: unknown[] = [];
+  for await (const part of provider.stream([], new AbortController().signal))
+    out.push(part);
+  expect(out).toEqual([
+    {
+      id: "c1",
+      name: "web_search",
+      args: '{"query":"gold"}',
+      extra: { google: { thought_signature: "s" } },
+    },
+  ]);
+});
