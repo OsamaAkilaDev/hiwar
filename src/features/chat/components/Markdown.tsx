@@ -118,11 +118,18 @@ export const Markdown = memo(function Markdown({
           if (token.type !== "code") {
             return { kind: "md", raw: linkCitations(token.raw, citations) };
           }
-          const lang = String(token.lang ?? "")
-            .trim()
-            .toLowerCase();
+          // Models sometimes put the spec on the fence line ("```chart {…}");
+          // the info string then holds the start of the code.
+          const info = String(token.lang ?? "").trim();
+          const lang = info.split(/\s/)[0]?.toLowerCase() ?? "";
+          const inline = info.slice(lang.length).trim();
           return isVisualLang(lang)
-            ? { kind: "visual", raw: token.raw, lang, code: token.text }
+            ? {
+                kind: "visual",
+                raw: token.raw,
+                lang,
+                code: inline ? `${inline}\n${token.text}` : token.text,
+              }
             : { kind: "md", raw: token.raw };
         }),
     [text, citations],

@@ -54,6 +54,7 @@ export function Chart({ spec, lang }: Props) {
 type Part = { spec: ChartSpec; format: (n: number) => string };
 
 // Horizontal bars in HTML: long Arabic labels wrap and mirror for free.
+// Short units (%, k, M) ride on each value; longer ones stay in the title.
 function Bars({ spec, format }: Part) {
   const max = Math.max(...spec.data.map((d) => d.value), 0) || 1;
   return (
@@ -80,7 +81,7 @@ function Bars({ spec, format }: Part) {
           </span>
           <span className="font-mono text-xs tabular-nums">
             {format(d.value)}
-            {spec.unit ? (
+            {spec.unit && spec.unit.length <= 3 ? (
               <span className="ms-0.5 text-subtle">{spec.unit}</span>
             ) : null}
           </span>
