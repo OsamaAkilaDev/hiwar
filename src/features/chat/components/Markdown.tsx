@@ -1,10 +1,11 @@
 import { marked } from "marked";
-import { type ComponentProps, memo, useMemo } from "react";
+import { type ComponentProps, lazy, memo, Suspense, useMemo } from "react";
 import ReactMarkdown, { type ExtraProps } from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { useT } from "../../../i18n";
 import { type Citation, linkCitations } from "../../../lib/citations";
 import { dirOf, dirProps } from "../../../lib/dir";
+import { hasMath, normalizeMath } from "../../../lib/math";
 import { isClosedFence, isVisualLang, type VisualLang } from "../visuals/spec";
 import { Visual } from "../visuals/Visual";
 import { CopyButton } from "./CopyButton";
@@ -65,12 +66,29 @@ function Link({
 
 const components = { pre: CodeBlock, a: Link };
 
+// KaTeX (~75 KB + fonts) loads the first time a block contains math; until
+// then the block renders as plain Markdown. Code fences never count as math.
+const MathMarkdown = lazy(() => import("./MathMarkdown"));
+
 const Block = memo(function Block({ source }: { source: string }) {
+  const plain = (
+    <ReactMarkdown remarkPlugins={[remarkGfm]} components={components}>
+      {source}
+    </ReactMarkdown>
+  );
+  const math = !/^s*(```|~~~)/.test(source) && hasMath(source);
   return (
     <div {...dirProps(source)}>
-      <ReactMarkdown remarkPlugins={[remarkGfm]} components={components}>
-        {source}
-      </ReactMarkdown>
+      {math ? (
+        <Suspense fallback={plain}>
+          <MathMarkdown
+            source={normalizeMath(source)}
+            components={components}
+          />
+        </Suspense>
+      ) : (
+        plain
+      )}
     </div>
   );
 });

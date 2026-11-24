@@ -585,3 +585,15 @@
     opacity: 0;
   }
 }
+
+/* Math reads left to right even inside an Arabic paragraph. */
+.prose-chat .katex {
+  font-size: 1.08em;
+  direction: ltr;
+  unicode-bidi: isolate;
+}
+.prose-chat .katex-display {
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-block: 0.25em;
+}
