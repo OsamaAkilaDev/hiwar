@@ -1,10 +1,16 @@
 import { createFileRoute, useRouter } from "@tanstack/react-router";
-import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  lazy,
+  Suspense,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import type { MessageDTO } from "../../shared/events";
 import { Composer } from "../features/chat/components/Composer";
 import { EmptyState } from "../features/chat/components/EmptyState";
-import { MessageList } from "../features/chat/components/MessageList";
-import { Note, RetryButton } from "../features/chat/components/MessageRow";
+import { Note, RetryButton } from "../features/chat/components/Note";
 import {
   fetchMessages,
   useConversation,
@@ -14,12 +20,23 @@ import { useSendMessage } from "../features/chat/hooks/useSendMessage";
 import { useT } from "../i18n";
 import { queryKeys } from "../lib/query-keys";
 
+// The thread (Markdown, visuals) is its own chunk, so a new chat renders without
+// waiting for it. A chat with messages loads it alongside the data; an empty
+// one fetches it in the background before the first send.
+const loadThread = () => import("../features/chat/components/MessageList");
+const MessageList = lazy(() =>
+  loadThread().then((m) => ({ default: m.MessageList })),
+);
+
 export const Route = createFileRoute("/chat/$conversationId")({
-  loader: ({ context: { queryClient }, params: { conversationId } }) =>
-    queryClient.ensureQueryData({
+  loader: async ({ context: { queryClient }, params: { conversationId } }) => {
+    const rows = await queryClient.ensureQueryData({
       queryKey: queryKeys.messages(conversationId),
       queryFn: () => fetchMessages(queryClient, conversationId),
-    }),
+    });
+    if (rows.length) await loadThread();
+    return rows;
+  },
   pendingComponent: ChatSkeleton,
   errorComponent: ChatError,
   component: ChatScreen,
@@ -51,6 +68,10 @@ function Conversation({ conversationId }: { conversationId: string }) {
     ),
   );
   const [announcement, setAnnouncement] = useState("");
+
+  useEffect(() => {
+    void loadThread();
+  }, []);
   const watching = useRef<string | null>(null);
 
   useEffect(() => {
@@ -101,13 +122,15 @@ function Conversation({ conversationId }: { conversationId: string }) {
       ) : (
         <>
           <div className={`${column} thread-in flex-1 pt-7`}>
-            <MessageList
-              messages={messages}
-              streamingId={streamingId}
-              settled={settled}
-              onReachTop={loadOlder}
-              onRetry={retry}
-            />
+            <Suspense>
+              <MessageList
+                messages={messages}
+                streamingId={streamingId}
+                settled={settled}
+                onReachTop={loadOlder}
+                onRetry={retry}
+              />
+            </Suspense>
           </div>
           <div className="sticky bottom-0 bg-linear-to-t from-bg from-60% to-transparent pt-6 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
             <div className={column}>{composer}</div>
