@@ -2,11 +2,25 @@
 // are written by the model, so they are checked before rendering.
 import * as z from "zod/mini";
 
-export const VISUAL_LANGS = ["chart", "mermaid", "stepper", "html"] as const;
+export const VISUAL_LANGS = [
+  "chart",
+  "mermaid",
+  "dot",
+  "markmap",
+  "stepper",
+  "html",
+] as const;
 export type VisualLang = (typeof VISUAL_LANGS)[number];
 
-export const isVisualLang = (lang: string): lang is VisualLang =>
-  (VISUAL_LANGS as readonly string[]).includes(lang);
+// Other names models use for the same languages.
+const ALIASES: Record<string, VisualLang> = { graphviz: "dot", gv: "dot" };
+
+/** The visual a fence's language tag names, if any. */
+export const visualLangOf = (lang: string): VisualLang | undefined =>
+  ALIASES[lang] ??
+  ((VISUAL_LANGS as readonly string[]).find((l) => l === lang) as
+    | VisualLang
+    | undefined);
 
 // A fence is closed once its last line is the closing ``` (or ~~~). Until
 // then the row shows a placeholder instead of half a spec.

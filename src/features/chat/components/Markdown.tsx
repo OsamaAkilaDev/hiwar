@@ -8,8 +8,8 @@ import { dirOf, dirProps } from "../../../lib/dir";
 import { hasMath, normalizeMath } from "../../../lib/math";
 import {
   isClosedFence,
-  isVisualLang,
   type VisualLang,
+  visualLangOf,
   visualOfJson,
 } from "../visuals/spec";
 import { Visual } from "../visuals/Visual";
@@ -129,11 +129,11 @@ export const Markdown = memo(function Markdown({
           const lang = info.split(/\s/)[0]?.toLowerCase() ?? "";
           const inline = info.slice(lang.length).trim();
           const code = inline ? `${inline}\n${token.text}` : token.text;
-          const visual = isVisualLang(lang)
-            ? lang
-            : lang === "json" && isClosedFence(token.raw)
+          const visual =
+            visualLangOf(lang) ??
+            (lang === "json" && isClosedFence(token.raw)
               ? visualOfJson(code)
-              : undefined;
+              : undefined);
           return visual
             ? { kind: "visual", raw: token.raw, lang: visual, code }
             : { kind: "md", raw: token.raw };

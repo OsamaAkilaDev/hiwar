@@ -1,19 +1,25 @@
 import {
   ChartBarIcon,
   CodeIcon,
+  GraphIcon,
   ListNumbersIcon,
   TreeStructureIcon,
+  TreeViewIcon,
 } from "@phosphor-icons/react";
 import { lazy, memo, type ReactNode, Suspense, useState } from "react";
 import { useT } from "../../../i18n";
 import { Chart } from "./Chart";
+import { Diagram } from "./Diagram";
 import { Frame } from "./Frame";
 import { SandboxFrame } from "./SandboxFrame";
 import { Stepper } from "./Stepper";
 import { ChartSpec, parseSpec, StepperSpec, type VisualLang } from "./spec";
 
-// Mermaid is ~0.5 MB: it loads the first time a reply draws a diagram.
-const Mermaid = lazy(() => import("./Mermaid"));
+// Renderers are heavy (Mermaid ~0.5 MB): each loads the first time a reply
+// uses it. Module-level, so the reference is stable across renders.
+const loadMermaid = () => import("./mermaid").then((m) => m.render);
+const loadGraphviz = () => import("./graphviz").then((m) => m.render);
+const Markmap = lazy(() => import("./Markmap"));
 
 type Props = {
   lang: VisualLang;
@@ -27,6 +33,8 @@ type Props = {
 const ICONS = {
   chart: ChartBarIcon,
   mermaid: TreeStructureIcon,
+  dot: GraphIcon,
+  markmap: TreeViewIcon,
   stepper: ListNumbersIcon,
   html: CodeIcon,
 };
@@ -36,6 +44,8 @@ const ICONS = {
 const HEIGHTS = {
   chart: "h-72",
   mermaid: "h-80",
+  dot: "h-80",
+  markmap: "h-80",
   stepper: "h-56",
   html: "h-56",
 };
@@ -101,19 +111,32 @@ export const Visual = memo(
     }
     if (lang === "mermaid") {
       return (
-        <Suspense fallback={<Placeholder lang="mermaid" />}>
-          <Frame
-            dir={dir}
-            action={
-              <SourceToggle open={source} onToggle={() => setSource(!source)} />
-            }
-          >
-            {source ? (
-              fallback()
-            ) : (
-              <Mermaid code={code} fallback={fallback()} />
-            )}
-          </Frame>
+        <Diagram
+          code={code}
+          name="diagram"
+          dir={dir}
+          load={loadMermaid}
+          placeholder={<Placeholder lang="mermaid" />}
+          fallback={fallback}
+        />
+      );
+    }
+    if (lang === "dot") {
+      return (
+        <Diagram
+          code={code}
+          name="graph"
+          dir={dir}
+          load={loadGraphviz}
+          placeholder={<Placeholder lang="dot" />}
+          fallback={fallback}
+        />
+      );
+    }
+    if (lang === "markmap") {
+      return (
+        <Suspense fallback={<Placeholder lang="markmap" />}>
+          <Markmap code={code} dir={dir} fallback={fallback} />
         </Suspense>
       );
     }
