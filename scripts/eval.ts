@@ -1,6 +1,7 @@
 // Model eval: fixed prompts with automatic checks, run against each candidate.
 // Usage: bun --env-file=.dev.vars scripts/eval.ts [model ...]  (groq:<model> for Groq)
-// EVAL_CASE=<id> EVAL_RUNS=<n> repeats one case and skips the report.
+// EVAL_CASE=<id> EVAL_RUNS=<n> repeats one case and skips the report;
+// EVAL_SHOW=1 prints the replies that fail.
 // Writes docs/evals/<date>.md. Re-run when providers change their free tiers.
 
 import { mkdir } from "node:fs/promises";
@@ -9,6 +10,7 @@ import {
   ChartSpec,
   parseSpec,
   StepperSpec,
+  visualLangOf,
   visualOfJson,
 } from "../src/features/chat/visuals/spec";
 import { LAST_WORD, systemPrompt } from "../worker/llm/prompts/system";
@@ -70,10 +72,12 @@ const isEnglish: Check = ["english", (r) => arabicShare(r) < 0.05];
 const noDialect: Check = ["no Egyptian", (r) => !EGYPTIAN.test(r)];
 const noVisual: Check = [
   "no visual",
-  (r) =>
-    !fences(r).some((f) =>
-      ["chart", "mermaid", "stepper", "html"].includes(f.lang),
-    ),
+  (r) => !fences(r).some((f) => visualLangOf(f.lang)),
+];
+/** Passes when the reply draws one of these visuals. */
+const uses = (...langs: string[]): Check => [
+  langs.join(" or "),
+  (r) => fences(r).some((f) => langs.includes(visualLangOf(f.lang) ?? "")),
 ];
 const visual = (lang: "chart" | "stepper"): Check => [
   `valid ${lang}`,
@@ -202,6 +206,47 @@ const CASES: Case[] = [
     checks: [
       isEnglish,
       ["mermaid", (r) => fences(r).some((f) => f.lang === "mermaid")],
+    ],
+  },
+  {
+    id: "timeline-en",
+    lane: "visual",
+    locale: "en",
+    thread: [user("What were the key milestones of the space race?")],
+    checks: [isEnglish, uses("timeline")],
+  },
+  {
+    id: "cycle-ar",
+    lane: "visual",
+    locale: "ar",
+    thread: [user("اشرح لي دورة الماء في الطبيعة")],
+    checks: [isArabic, uses("cycle", "mermaid")],
+  },
+  {
+    id: "compare-en",
+    lane: "visual",
+    locale: "en",
+    thread: [user("Compare REST, GraphQL and gRPC for a mobile backend.")],
+    checks: [isEnglish, uses("compare")],
+  },
+  {
+    id: "sequence-en",
+    lane: "visual",
+    locale: "en",
+    thread: [
+      user(
+        "Draw a diagram of an OAuth login between browser, app and auth server.",
+      ),
+    ],
+    checks: [
+      isEnglish,
+      [
+        "sequenceDiagram",
+        (r) =>
+          fences(r).some(
+            (f) => f.lang === "mermaid" && f.code.includes("sequenceDiagram"),
+          ),
+      ],
     ],
   },
   {
@@ -364,6 +409,7 @@ for (const model of models) {
     console.log(
       `${model.padEnd(24)} ${c.id.padEnd(16)} ${r.failed.length ? `FAIL ${r.failed.join(", ")}` : "ok"} ${Math.round(r.totalMs)}ms${r.error ? ` (${r.error})` : ""}`,
     );
+    if (process.env.EVAL_SHOW && r.failed.length) console.log(r.reply);
     await Bun.sleep(4000);
   }
 }

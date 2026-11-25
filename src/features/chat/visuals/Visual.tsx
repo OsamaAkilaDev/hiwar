@@ -1,19 +1,37 @@
 import {
+  ArrowsClockwiseIcon,
+  CalendarDotsIcon,
   ChartBarIcon,
   CodeIcon,
+  ColumnsIcon,
+  FunctionIcon,
   GraphIcon,
   ListNumbersIcon,
+  ScalesIcon,
   TreeStructureIcon,
   TreeViewIcon,
 } from "@phosphor-icons/react";
 import { lazy, memo, type ReactNode, Suspense, useState } from "react";
 import { useT } from "../../../i18n";
+import { Compare, Cycle, ProsCons, Timeline, Tree } from "./Blocks";
 import { Chart } from "./Chart";
 import { Diagram } from "./Diagram";
 import { Frame } from "./Frame";
+import { layoutPlot, Plot } from "./Plot";
 import { SandboxFrame } from "./SandboxFrame";
 import { Stepper } from "./Stepper";
-import { ChartSpec, parseSpec, StepperSpec, type VisualLang } from "./spec";
+import {
+  ChartSpec,
+  CompareSpec,
+  CycleSpec,
+  PlotSpec,
+  ProsConsSpec,
+  parseSpec,
+  StepperSpec,
+  TimelineSpec,
+  TreeSpec,
+  type VisualLang,
+} from "./spec";
 
 // Renderers are heavy (Mermaid ~0.5 MB): each loads the first time a reply
 // uses it. Module-level, so the reference is stable across renders.
@@ -32,10 +50,16 @@ type Props = {
 
 const ICONS = {
   chart: ChartBarIcon,
+  plot: FunctionIcon,
   mermaid: TreeStructureIcon,
   dot: GraphIcon,
   markmap: TreeViewIcon,
   stepper: ListNumbersIcon,
+  timeline: CalendarDotsIcon,
+  compare: ColumnsIcon,
+  cycle: ArrowsClockwiseIcon,
+  tree: TreeStructureIcon,
+  proscons: ScalesIcon,
   html: CodeIcon,
 };
 
@@ -43,10 +67,16 @@ const ICONS = {
 // text below doesn't jump when the block closes.
 const HEIGHTS = {
   chart: "h-72",
+  plot: "h-96",
   mermaid: "h-80",
   dot: "h-80",
   markmap: "h-80",
   stepper: "h-56",
+  timeline: "h-64",
+  compare: "h-56",
+  cycle: "h-96",
+  tree: "h-56",
+  proscons: "h-48",
   html: "h-56",
 };
 
@@ -100,12 +130,67 @@ export const Visual = memo(
         </Frame>
       );
     }
+    if (lang === "plot") {
+      const spec = parseSpec(PlotSpec, code);
+      const layout = spec && layoutPlot(spec);
+      if (!spec || !layout) return fallback();
+      return (
+        <Frame title={spec.title} dir={dir}>
+          <Plot spec={spec} layout={layout} />
+        </Frame>
+      );
+    }
     if (lang === "stepper") {
       const spec = parseSpec(StepperSpec, code);
       if (!spec) return fallback();
       return (
         <Frame title={spec.title} dir={dir}>
           <Stepper spec={spec} />
+        </Frame>
+      );
+    }
+    if (lang === "timeline") {
+      const spec = parseSpec(TimelineSpec, code);
+      if (!spec) return fallback();
+      return (
+        <Frame title={spec.title} dir={dir}>
+          <Timeline spec={spec} />
+        </Frame>
+      );
+    }
+    if (lang === "compare") {
+      const spec = parseSpec(CompareSpec, code);
+      if (!spec) return fallback();
+      return (
+        <Frame title={spec.title} dir={dir}>
+          <Compare spec={spec} />
+        </Frame>
+      );
+    }
+    if (lang === "cycle") {
+      const spec = parseSpec(CycleSpec, code);
+      if (!spec) return fallback();
+      return (
+        <Frame title={spec.title} dir={dir}>
+          <Cycle spec={spec} dir={dir} />
+        </Frame>
+      );
+    }
+    if (lang === "tree") {
+      const spec = parseSpec(TreeSpec, code);
+      if (!spec) return fallback();
+      return (
+        <Frame title={spec.title} dir={dir}>
+          <Tree spec={spec} />
+        </Frame>
+      );
+    }
+    if (lang === "proscons") {
+      const spec = parseSpec(ProsConsSpec, code);
+      if (!spec) return fallback();
+      return (
+        <Frame title={spec.title} dir={dir}>
+          <ProsCons spec={spec} />
         </Frame>
       );
     }
