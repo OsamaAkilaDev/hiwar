@@ -1,4 +1,5 @@
 import type { CSSProperties } from "react";
+import { monotonePath } from "./smooth";
 import type { ChartSpec } from "./spec";
 
 type Props = { spec: ChartSpec; lang: "ar" | "en" };
@@ -105,7 +106,7 @@ function Line({ spec, format, rtl }: Part & { rtl: boolean }) {
     return (rtl ? 1 - t : t) * W;
   };
   const y = (v: number) => H - ((v - lo) / (hi - lo)) * H;
-  const points = spec.data.map((d, i) => `${x(i)},${y(d.value)}`).join(" ");
+  const line = monotonePath(spec.data.map((d, i) => [x(i), y(d.value)]));
   const ticks = [hi, (hi + lo) / 2, lo];
   const labels =
     n <= 8
@@ -146,13 +147,13 @@ function Line({ spec, format, rtl }: Part & { rtl: boolean }) {
               vectorEffect="non-scaling-stroke"
             />
           ))}
-          <polygon
+          <path
             className="chart-area"
-            points={`${x(0)},${H} ${points} ${x(n - 1)},${H}`}
+            d={`${line}L${x(n - 1)} ${H}L${x(0)} ${H}Z`}
             fill="url(#area)"
           />
-          <polyline
-            points={points}
+          <path
+            d={line}
             fill="none"
             stroke="var(--accent)"
             strokeWidth="2.25"
