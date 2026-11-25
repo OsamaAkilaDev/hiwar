@@ -1,4 +1,4 @@
-import { ArrowUpIcon, StopIcon } from "@phosphor-icons/react";
+import { ArrowUpIcon, CaretDownIcon, StopIcon } from "@phosphor-icons/react";
 import {
   type FormEvent,
   type KeyboardEvent,
@@ -8,6 +8,7 @@ import {
   useState,
 } from "react";
 import { useT } from "../../../i18n";
+import { usePrefs } from "../../../lib/prefs";
 
 type Props = {
   /** Stagger the composer in on mount (empty state). */
@@ -93,7 +94,8 @@ export function Composer({ intro, isStreaming, onSend, onStop }: Props) {
           placeholder={t("composerPlaceholder")}
           className="block max-h-56 min-h-14 w-full resize-none overflow-y-auto bg-transparent px-4.5 pt-4 pb-1.5 text-[0.95rem] leading-relaxed outline-none placeholder:text-subtle [&:lang(ar)]:leading-[1.85]"
         />
-        <div className="flex justify-end px-2.5 pt-1 pb-2.5">
+        <div className="flex items-center justify-between px-2.5 pt-1 pb-2.5">
+          <ModelPicker />
           {isStreaming ? (
             <button
               type="button"
@@ -109,7 +111,7 @@ export function Composer({ intro, isStreaming, onSend, onStop }: Props) {
               type="submit"
               disabled={!canSend}
               aria-label={t("send")}
-              className={`${sendButton} disabled:bg-surface-2 disabled:text-subtle`}
+              className={`${sendButton} disabled:scale-[0.86] disabled:bg-surface-2 disabled:text-subtle`}
             >
               <ArrowUpIcon weight="bold" className="size-4.5" aria-hidden />
             </button>
@@ -136,10 +138,35 @@ export function Composer({ intro, isStreaming, onSend, onStop }: Props) {
 }
 
 const sendButton =
-  "grid size-9 place-items-center rounded-xl bg-accent text-accent-ink hover:brightness-105";
+  "spring grid size-9 place-items-center rounded-xl bg-accent text-accent-ink hover:brightness-105";
 
 const Kbd = ({ children }: { children: string }) => (
   <kbd className="rounded-[0.3rem] border border-line px-1.5 font-mono text-[0.7rem]">
     {children}
   </kbd>
 );
+
+// Picks which model answers first; the other stays as the fallback.
+function ModelPicker() {
+  const t = useT();
+  const model = usePrefs((s) => s.model);
+  const setModel = usePrefs((s) => s.setModel);
+  return (
+    <label className="relative flex items-center rounded-lg text-muted text-xs transition-colors hover:bg-surface-2 hover:text-fg">
+      <span className="sr-only">{t("model")}</span>
+      <select
+        value={model}
+        onChange={(e) => setModel(e.target.value as typeof model)}
+        className="h-8 cursor-pointer appearance-none bg-transparent ps-2.5 pe-7 font-medium outline-none focus-visible:rounded-lg focus-visible:ring-2 focus-visible:ring-accent"
+      >
+        <option value="gemini">Gemini 3.5 Flash-Lite</option>
+        <option value="groq">GPT-OSS 120B</option>
+      </select>
+      <CaretDownIcon
+        weight="bold"
+        className="pointer-events-none absolute end-2 size-3"
+        aria-hidden
+      />
+    </label>
+  );
+}

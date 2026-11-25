@@ -11,7 +11,11 @@ import { useT } from "../../../i18n";
 import { ar } from "../../../i18n/ar";
 import { en } from "../../../i18n/en";
 import { usePrefs } from "../../../lib/prefs";
-import type { Accent, LocaleSetting, Theme } from "../../../lib/resolve-prefs";
+import {
+  ACCENTS,
+  type LocaleSetting,
+  type Theme,
+} from "../../../lib/resolve-prefs";
 import { useDeleteAllConversations } from "../hooks/useDeleteAllConversations";
 import { useForgetAll } from "../hooks/useMemory";
 import { MemoryPanel } from "./MemoryPanel";
@@ -23,11 +27,6 @@ const tabs = [
   { id: "data", Icon: DatabaseIcon },
   { id: "memory", Icon: BrainIcon },
 ] as const;
-
-const swatches: { id: Accent; color: string }[] = [
-  { id: "teal", color: "#7cd0c2" },
-  { id: "saffron", color: "#f2b94b" },
-];
 
 function Row({
   label,
@@ -174,8 +173,8 @@ export function SettingsDialog({
                   />
                 </Row>
                 <Row label={t("accent.label")} hint={t("accent.hint")}>
-                  <div className="flex gap-2">
-                    {swatches.map(({ id, color }) => (
+                  <div className="flex flex-wrap gap-2">
+                    {ACCENTS.map((id) => (
                       <button
                         key={id}
                         type="button"
@@ -183,8 +182,8 @@ export function SettingsDialog({
                         title={t(`accent.${id}`)}
                         aria-pressed={accent === id}
                         onClick={() => setAccent(id)}
-                        style={{ background: color }}
-                        className="size-6.5 rounded-full shadow-[inset_0_0_0_1px_rgb(255_255_255/0.2)] aria-pressed:outline-2 aria-pressed:outline-fg aria-pressed:outline-offset-2"
+                        data-accent={id}
+                        className="size-6.5 rounded-full bg-accent shadow-[inset_0_0_0_1px_rgb(255_255_255/0.2)] aria-pressed:outline-2 aria-pressed:outline-fg aria-pressed:outline-offset-2"
                       />
                     ))}
                   </div>

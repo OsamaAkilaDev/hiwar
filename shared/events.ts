@@ -7,6 +7,8 @@ export const ChatStreamRequest = z.object({
   text: z.string().min(1).max(8000),
   locale: z.enum(["ar", "en"]),
   memory: z.boolean().default(true),
+  /** Provider to try first; the rest stay as fallback. */
+  model: z.enum(["gemini", "groq"]).optional(),
 });
 export type ChatStreamRequest = z.input<typeof ChatStreamRequest>;
 

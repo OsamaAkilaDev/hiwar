@@ -55,6 +55,7 @@ export const chat = new Hono<{ Bindings: Env }>().post(
       text,
       locale,
       memory,
+      model,
     } = parsed.data;
 
     const userId = SEED_USER_ID;
@@ -145,7 +146,10 @@ export const chat = new Hono<{ Bindings: Env }>().post(
           ),
         );
 
-        const providers = providersFromEnv(c.env);
+        // The chosen provider goes first; the others stay as fallback.
+        const providers = providersFromEnv(c.env).sort(
+          (a, b) => Number(b.name === model) - Number(a.name === model),
+        );
         const titleAbort = new AbortController();
         const title = titleFrom
           ? generateTitle(providers, titleFrom, titleAbort.signal)

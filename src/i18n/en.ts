@@ -1,6 +1,7 @@
 export const en = {
   emptyHeading: "How can I help?",
   composerLabel: "Message",
+  model: "Model",
   composerPlaceholder: "Message Hiwar",
   send: "Send message",
   stop: "Stop reply",
@@ -82,6 +83,10 @@ export const en = {
   "accent.hint": "Used only for things you can act on.",
   "accent.teal": "Teal",
   "accent.saffron": "Saffron",
+  "accent.blue": "Blue",
+  "accent.violet": "Violet",
+  "accent.rose": "Rose",
+  "accent.lime": "Lime",
   "language.label": "Language",
   "language.hint": "Follows your browser until you choose.",
   "name.label": "Your name",

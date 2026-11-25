@@ -17,8 +17,8 @@ export function EmptyState() {
   const line = pool[Math.floor(roll * pool.length)] ?? "";
 
   return (
-    <div className="enter flex items-center justify-center gap-3.5 [--i:0]">
-      <Mark className="size-9 shrink-0" animate="draw" />
+    <div className="enter flex flex-col items-center gap-4 [--i:0]">
+      <Mark className="size-10 shrink-0" animate="draw" />
       <h1 className="text-center font-display font-medium text-3xl tracking-[-0.02em] sm:text-4xl [&:lang(ar)]:font-kufi [&:lang(ar)]:tracking-normal">
         {name ? line.replace("{name}", name) : withoutName(line)}
       </h1>

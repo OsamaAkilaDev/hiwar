@@ -6,6 +6,12 @@ import { defineConfig } from "vite";
 import { VitePWA } from "vite-plugin-pwa";
 
 export default defineConfig({
+  // Scan every source file at startup: route code splitting hides imports
+  // from Vite's default crawl, and discovering a dependency mid-session
+  // re-bundles deps under a new hash, which left pages hanging on load.
+  optimizeDeps: {
+    entries: ["index.html", "src/**/*.{ts,tsx}", "!src/**/*.test.*"],
+  },
   plugins: [
     tanstackRouter({ target: "react", autoCodeSplitting: true }),
     react(),
@@ -20,8 +26,8 @@ export default defineConfig({
         start_url: "/",
         scope: "/",
         display: "standalone",
-        background_color: "#0c0c0e",
-        theme_color: "#0c0c0e",
+        background_color: "#17171a",
+        theme_color: "#17171a",
         lang: "en",
         icons: [
           { src: "pwa-64x64.png", sizes: "64x64", type: "image/png" },

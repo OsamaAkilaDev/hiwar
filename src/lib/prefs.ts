@@ -3,15 +3,17 @@ import {
   type Accent,
   type Locale,
   type LocaleSetting,
+  type Model,
   paletteOf,
   resolveAccent,
   resolveLocale,
   resolveLocaleSetting,
+  resolveModel,
   resolveTheme,
   type Theme,
 } from "./resolve-prefs";
 
-const THEME_COLOR = { dark: "#0c0c0e", light: "#fbfbfc" };
+const THEME_COLOR = { dark: "#17171a", light: "#fbfbfc" };
 
 const read = (key: string) => {
   try {
@@ -37,11 +39,13 @@ type Prefs = {
   accent: Accent;
   name: string;
   memory: boolean;
+  model: Model;
   setLocale: (setting: LocaleSetting) => void;
   setTheme: (theme: Theme) => void;
   setAccent: (accent: Accent) => void;
   setName: (name: string) => void;
   setMemory: (on: boolean) => void;
+  setModel: (model: Model) => void;
 };
 
 const html = document.documentElement;
@@ -68,6 +72,7 @@ export const usePrefs = create<Prefs>((set) => ({
   accent: resolveAccent(read("hiwar.accent")),
   name: read("hiwar.name") ?? "",
   memory: read("hiwar.memory") !== "off",
+  model: resolveModel(read("hiwar.model")),
   setLocale: (setting) => {
     persist("hiwar.locale", setting === "auto" ? null : setting);
     const locale =
@@ -97,6 +102,10 @@ export const usePrefs = create<Prefs>((set) => ({
   setMemory: (memory) => {
     persist("hiwar.memory", memory ? "on" : "off");
     set({ memory });
+  },
+  setModel: (model) => {
+    persist("hiwar.model", model);
+    set({ model });
   },
 }));
 

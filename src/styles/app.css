@@ -6,24 +6,23 @@
 @import "@fontsource/noto-kufi-arabic/500.css";
 @import "@fontsource/noto-kufi-arabic/700.css";
 
+/* Neutrals carry a faint cool tint (OKLCH hue 285). Every accent below was
+   measured: >= 9.7:1 on the dark page, >= 4.7:1 for white ink in light. */
 :root,
 [data-theme="dark"] {
   color-scheme: dark;
-  --bg: #0c0c0e;
-  --rail: #111114;
-  --surface: #17171b;
-  --surface-2: #1f1f24;
-  --line: #26262c;
-  --fg: #ececef;
-  --muted: #a3a3ad;
-  --subtle: #8a8a95;
-  --glass: rgb(17 17 20 / 0.62);
-  --accent: #7cd0c2;
-  --accent-ink: #0b1f1c;
-  --accent-soft: rgb(124 208 194 / 0.14);
-  --accent-text: var(--accent);
+  --bg: #17171a;
+  --rail: #1b1b1e;
+  --surface: #212124;
+  --surface-2: #2b2b2e;
+  --line: #353538;
+  --fg: #eeeef1;
+  --muted: #b7b7bb;
+  --subtle: #9e9ea2;
+  --glass: rgb(27 27 30 / 0.62);
   --danger: oklch(0.72 0.14 25);
-  --lift: 0 18px 50px -24px rgb(0 0 0 / 0.6);
+  --lift: 0 18px 50px -24px rgb(0 0 0 / 0.55);
+  --soft-mix: 16%;
 }
 
 [data-theme="light"] {
@@ -37,24 +36,85 @@
   --muted: #55555f;
   --subtle: #6b6b76;
   --glass: rgb(251 251 252 / 0.7);
-  --accent: #19726c;
-  --accent-ink: #ffffff;
-  --accent-soft: rgb(25 114 108 / 0.12);
-  --accent-text: var(--accent);
   --danger: oklch(0.55 0.18 25);
   --lift: 0 18px 50px -28px rgb(15 20 30 / 0.25);
+  --soft-mix: 12%;
+}
+
+/* Accents: [data-accent] also works on any element (the settings swatches). */
+[data-accent] {
+  --accent-soft: color-mix(
+    in oklab,
+    var(--accent) var(--soft-mix),
+    transparent
+  );
+  --accent-text: var(--accent);
+}
+
+[data-accent="teal"] {
+  --accent: #5addc7;
+  --accent-ink: #00201b;
 }
 
 [data-accent="saffron"] {
-  --accent: #f2b94b;
-  --accent-ink: #1d1404;
-  --accent-soft: rgb(242 185 75 / 0.14);
-  --accent-text: var(--accent);
+  --accent: #fac053;
+  --accent-ink: #241803;
 }
 
-[data-theme="light"][data-accent="saffron"] {
-  --accent-soft: rgb(242 185 75 / 0.22);
-  --accent-text: #8a5a00;
+[data-accent="blue"] {
+  --accent: #9dc7fe;
+  --accent-ink: #0d1b2d;
+}
+
+[data-accent="violet"] {
+  --accent: #c8b7ff;
+  --accent-ink: #1c172b;
+}
+
+[data-accent="rose"] {
+  --accent: #ffa5c8;
+  --accent-ink: #29121b;
+}
+
+[data-accent="lime"] {
+  --accent: #a2df80;
+  --accent-ink: #121f0b;
+}
+
+[data-theme="light"][data-accent="teal"],
+[data-theme="light"] [data-accent="teal"] {
+  --accent: #037465;
+  --accent-ink: #ffffff;
+}
+
+[data-theme="light"][data-accent="saffron"],
+[data-theme="light"] [data-accent="saffron"] {
+  --accent: #825b00;
+  --accent-ink: #ffffff;
+}
+
+[data-theme="light"][data-accent="blue"],
+[data-theme="light"] [data-accent="blue"] {
+  --accent: #2863ab;
+  --accent-ink: #ffffff;
+}
+
+[data-theme="light"][data-accent="violet"],
+[data-theme="light"] [data-accent="violet"] {
+  --accent: #6a51a4;
+  --accent-ink: #ffffff;
+}
+
+[data-theme="light"][data-accent="rose"],
+[data-theme="light"] [data-accent="rose"] {
+  --accent: #9a3e67;
+  --accent-ink: #ffffff;
+}
+
+[data-theme="light"][data-accent="lime"],
+[data-theme="light"] [data-accent="lime"] {
+  --accent: #40731a;
+  --accent-ink: #ffffff;
 }
 
 /* Trim a text box to its visible glyphs (cap height to baseline) so labels
@@ -310,7 +370,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  *:not(.enter, .thread-in, .row-in, .mark-draw *),
+  *:not(.enter, .row-in, .bubble-in, .shell-in, .page-in, .mark-draw *),
   *::before,
   *::after {
     animation-duration: 0.01ms !important;
@@ -421,6 +481,20 @@
   }
 }
 
+@keyframes bubble {
+  from {
+    opacity: 0;
+    scale: 0.6;
+  }
+}
+
+@keyframes shell {
+  from {
+    opacity: 0;
+    translate: calc(var(--side) * 16px) 0;
+  }
+}
+
 @keyframes pulse-dot {
   50% {
     opacity: 0.25;
@@ -428,14 +502,12 @@
 }
 
 .enter,
-.thread-in,
 .row-in,
+.bubble-in,
+.shell-in,
+.page-in,
 .mark-draw :is(.dot, .ghost) {
   animation: reveal 150ms ease-out both;
-}
-
-.thread-in {
-  --dy: 8px;
 }
 
 .row-in {
@@ -448,9 +520,37 @@
     animation-delay: calc(var(--i, 0) * 100ms);
   }
 
-  .thread-in,
   .row-in {
     animation: slide-in 250ms cubic-bezier(0.2, 0, 0, 1) both;
+  }
+
+  /* A damped spring with ~9% overshoot: the bubbly feel. */
+  .bubble-in {
+    animation: bubble 550ms var(--spring) both;
+    transform-origin: bottom right;
+  }
+
+  [dir="rtl"] .bubble-in {
+    transform-origin: bottom left;
+  }
+
+  .shell-in {
+    --side: -1;
+    animation: shell 450ms cubic-bezier(0.2, 0, 0, 1) both;
+  }
+
+  [dir="rtl"] .shell-in {
+    --side: 1;
+  }
+
+  .spring {
+    transition:
+      scale 450ms var(--spring),
+      background-color 150ms ease-out;
+  }
+
+  .page-in {
+    animation: enter 300ms cubic-bezier(0.2, 0, 0, 1) both;
   }
 
   .mark-draw .ghost {
@@ -596,4 +696,31 @@
   overflow-x: auto;
   overflow-y: hidden;
   padding-block: 0.25em;
+}
+
+:root {
+  --spring: linear(
+    0,
+    0.06,
+    0.203,
+    0.383,
+    0.567,
+    0.732,
+    0.868,
+    0.969,
+    1.037,
+    1.076,
+    1.093,
+    1.093,
+    1.083,
+    1.067,
+    1.05,
+    1.033,
+    1.019,
+    1.007,
+    0.999,
+    0.994,
+    0.992,
+    1
+  );
 }

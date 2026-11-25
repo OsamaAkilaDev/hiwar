@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { tokenColor } from "../../../lib/token-color";
 
 const DEFAULT_HEIGHT = 224;
 const MAX_HEIGHT = 600;
@@ -26,10 +27,7 @@ export function SandboxFrame({ code, title }: { code: string; title: string }) {
   const [height, setHeight] = useState(DEFAULT_HEIGHT);
 
   const doc = useMemo(() => {
-    const style = getComputedStyle(document.documentElement);
-    const vars = TOKENS.map((t) => `${t}:${style.getPropertyValue(t)}`).join(
-      ";",
-    );
+    const vars = TOKENS.map((t) => `${t}:${tokenColor(t)}`).join(";");
     return `<!doctype html><html><head><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="${CSP}"><style>:root{${vars}}html,body{margin:0;background:transparent;}body{color:var(--fg);font:14px/1.5 system-ui,sans-serif}</style></head><body>${code}<script>function s(){parent.postMessage({hiwarHeight:document.documentElement.scrollHeight},"*")}addEventListener("load",s);new ResizeObserver(s).observe(document.documentElement)</script></body></html>`;
   }, [code]);
 

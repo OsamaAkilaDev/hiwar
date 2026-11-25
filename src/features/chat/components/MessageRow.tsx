@@ -41,10 +41,12 @@ export const MessageRow = memo(function MessageRow({
 
   if (message.role === "user") {
     return (
-      <div className={`flex justify-end ${fresh ? "animate-rise" : ""}`}>
+      <div className="flex justify-end">
         {/* The corner radius is logical on the UI side, so the small corner
           stays at the outer bottom edge whatever the message's own direction. */}
-        <div className="max-w-[85%] rounded-ss-[1.125rem] rounded-se-[1.125rem] rounded-es-[1.125rem] rounded-ee-[0.375rem] bg-surface-2 px-4 py-2.5">
+        <div
+          className={`max-w-[85%] ${fresh ? "bubble-in" : ""} rounded-ss-[1.125rem] rounded-se-[1.125rem] rounded-es-[1.125rem] rounded-ee-[0.375rem] bg-surface-2 px-4 py-2.5`}
+        >
           <p
             {...dirProps(message.content)}
             className="whitespace-pre-wrap break-words text-[0.95rem] leading-relaxed [&:lang(ar)]:leading-[1.85]"

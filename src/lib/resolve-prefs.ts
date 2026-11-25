@@ -1,7 +1,16 @@
 export type Locale = "ar" | "en";
 export type LocaleSetting = Locale | "auto";
 export type Theme = "dark" | "light" | "system";
-export type Accent = "teal" | "saffron";
+export const ACCENTS = [
+  "teal",
+  "saffron",
+  "blue",
+  "violet",
+  "rose",
+  "lime",
+] as const;
+export type Accent = (typeof ACCENTS)[number];
+export type Model = "gemini" | "groq";
 
 export const resolveLocale = ({
   saved,
@@ -25,4 +34,7 @@ export const paletteOf = (theme: Theme, prefersDark: boolean) =>
   theme === "system" ? (prefersDark ? "dark" : "light") : theme;
 
 export const resolveAccent = (saved: string | null): Accent =>
-  saved === "saffron" ? "saffron" : "teal";
+  ACCENTS.find((a) => a === saved) ?? "teal";
+
+export const resolveModel = (saved: string | null): Model =>
+  saved === "groq" ? "groq" : "gemini";

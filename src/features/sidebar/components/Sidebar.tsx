@@ -92,7 +92,7 @@ export function Sidebar({ onNavigate, onCollapse, onOpenSettings }: Props) {
 
   return (
     <div className="flex h-full flex-col pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]">
-      <div className="flex h-14 shrink-0 items-center gap-2.5 px-4.5">
+      <div className="flex h-14 shrink-0 items-center gap-2.5 ps-5 pe-4.5">
         <Mark className="size-7 shrink-0" />
         {locale === "ar" ? (
           <span className="text-trim font-bold font-kufi text-[1.15rem] leading-none">
@@ -100,7 +100,7 @@ export function Sidebar({ onNavigate, onCollapse, onOpenSettings }: Props) {
           </span>
         ) : (
           <span className="text-trim font-bold font-display text-[1.2rem] leading-none tracking-[-0.03em]">
-            hiwar
+            Hiwar
           </span>
         )}
         {onCollapse && (
@@ -216,7 +216,7 @@ export function Sidebar({ onNavigate, onCollapse, onOpenSettings }: Props) {
         <button type="button" onClick={onOpenSettings} className={row}>
           <span
             aria-hidden
-            className="text-trim grid size-6 shrink-0 place-items-center rounded-full bg-accent-soft font-medium text-accent-text text-xs"
+            className="grid size-5 shrink-0 place-items-center rounded-full bg-accent font-semibold text-[0.6rem] text-accent-ink"
           >
             {Array.from(label)[0]?.toUpperCase()}
           </span>

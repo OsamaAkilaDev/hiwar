@@ -5,6 +5,7 @@ import type { MessageKey } from "./en";
 export const ar: Record<MessageKey, string> = {
   emptyHeading: "كيف أقدر أساعدك؟",
   composerLabel: "رسالتك",
+  model: "الموديل",
   composerPlaceholder: "اسأل حوار أي شي",
   send: "إرسال",
   stop: "إيقاف الرد",
@@ -84,6 +85,10 @@ export const ar: Record<MessageKey, string> = {
   "accent.label": "اللون المميز",
   "accent.teal": "فيروزي",
   "accent.saffron": "زعفراني",
+  "accent.blue": "أزرق",
+  "accent.violet": "بنفسجي",
+  "accent.rose": "وردي",
+  "accent.lime": "أخضر",
   "language.hint": "تتبع لغة المتصفح حتى تختار لغة.",
   "name.label": "اسمك",
   "name.hint": "يُستخدم في التحية، ويبقى على جهازك.",

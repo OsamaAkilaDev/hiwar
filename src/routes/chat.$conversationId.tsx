@@ -117,7 +117,7 @@ function Conversation({ conversationId }: { conversationId: string }) {
         </div>
       ) : (
         <>
-          <div className={`${column} thread-in flex-1 pt-7`}>
+          <div className={`${column} flex-1 pt-7`}>
             <Suspense>
               <MessageList
                 messages={messages}

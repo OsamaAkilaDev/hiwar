@@ -1,8 +1,6 @@
 import mermaid from "mermaid";
 import { type ReactNode, useEffect, useId, useState } from "react";
-
-const css = (name: string) =>
-  getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+import { tokenColor as css } from "../../../lib/token-color";
 
 // Mermaid themes from the app's tokens, re-read on every render so a theme
 // or accent switch redraws the diagram in the new colours.

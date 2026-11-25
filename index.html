@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <meta name="theme-color" content="#0c0c0e" />
+    <meta name="theme-color" content="#17171a" />
     <link rel="icon" href="/favicon.ico" sizes="48x48" />
     <!-- Two plain files picked by media query: a <style> inside an SVG favicon stalls Chromium's page load. -->
     <link rel="icon" href="/favicon-light.svg" type="image/svg+xml" media="(prefers-color-scheme: light)" />
@@ -37,10 +37,10 @@
         html.lang = locale;
         html.dir = locale === "ar" ? "rtl" : "ltr";
         html.dataset.theme = theme;
-        html.dataset.accent = get("hiwar.accent") === "saffron" ? "saffron" : "teal";
+        html.dataset.accent = ["teal", "saffron", "blue", "violet", "rose", "lime"].includes(get("hiwar.accent")) ? get("hiwar.accent") : "teal";
         document
           .querySelector('meta[name="theme-color"]')
-          .setAttribute("content", theme === "light" ? "#fbfbfc" : "#0c0c0e");
+          .setAttribute("content", theme === "light" ? "#fbfbfc" : "#17171a");
       })();
     </script>
   </head>

@@ -7,6 +7,14 @@ import type {
 } from "../../shared/events";
 import { parseEventStream } from "../../shared/sse";
 
+// Reads give up after 15s, so a stuck request ends in the error screen
+// (with retry) instead of a page that never finishes loading.
+const READ_TIMEOUT_MS = 15_000;
+const timed = (signal?: AbortSignal) => {
+  const timeout = AbortSignal.timeout(READ_TIMEOUT_MS);
+  return signal ? AbortSignal.any([signal, timeout]) : timeout;
+};
+
 export async function getMessages(
   conversationId: string,
   { before, signal }: { before?: string; signal?: AbortSignal } = {},
@@ -14,7 +22,7 @@ export async function getMessages(
   const query = before ? `?before=${before}` : "";
   const res = await fetch(
     `/api/conversations/${conversationId}/messages${query}`,
-    { signal },
+    { signal: timed(signal) },
   );
   if (!res.ok) throw new Error(`messages request failed: ${res.status}`);
   return ((await res.json()) as { messages: MessageDTO[] }).messages;
@@ -45,7 +53,9 @@ export async function listConversations(
   signal?: AbortSignal,
 ): Promise<ConversationList> {
   const query = cursor ? `?cursor=${encodeURIComponent(cursor)}` : "";
-  const res = await fetch(`/api/conversations${query}`, { signal });
+  const res = await fetch(`/api/conversations${query}`, {
+    signal: timed(signal),
+  });
   if (!res.ok) throw new HttpError(res.status);
   return res.json();
 }
@@ -70,7 +80,7 @@ export async function deleteConversation(id: string) {
 }
 
 export async function getMemory(signal?: AbortSignal): Promise<MemorySnapshot> {
-  const res = await fetch("/api/memory", { signal });
+  const res = await fetch("/api/memory", { signal: timed(signal) });
   if (!res.ok) throw new HttpError(res.status);
   return res.json();
 }
