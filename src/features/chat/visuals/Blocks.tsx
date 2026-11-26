@@ -197,7 +197,9 @@ export function Cycle({ spec, dir }: { spec: CycleSpec; dir: "rtl" | "ltr" }) {
               <li
                 // biome-ignore lint/suspicious/noArrayIndexKey: static once rendered
                 key={i}
-                className="absolute flex max-w-[8.5rem] -translate-x-1/2 -translate-y-1/2 flex-col items-center gap-1 text-center"
+                // w-max: an absolute box near the edge would otherwise shrink
+                // to the space left of it and break labels mid-word.
+                className="absolute flex w-max max-w-[8.5rem] -translate-x-1/2 -translate-y-1/2 flex-col items-center gap-1 text-center"
                 style={{ left: `${p.x}%`, top: `${p.y}%` }}
               >
                 <span

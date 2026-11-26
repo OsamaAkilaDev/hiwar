@@ -16,7 +16,7 @@ export const SEARCH_TOOL: Tool = {
   },
 };
 
-// ponytail: Tavily only; a second provider (SearXNG) becomes a switch here.
+// Limit: Tavily only; a second provider (SearXNG) becomes a switch here.
 export async function webSearch(
   apiKey: string,
   query: string,

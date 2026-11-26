@@ -1,3 +1,5 @@
+// Streams a reply from the first provider that works. A provider that fails
+// before its first token, or rate-limits, hands the turn to the next one.
 import { mockProvider } from "./providers/mock";
 import { openAICompatible } from "./providers/openai-compatible";
 import type { ChatMessage, Provider, Tool, ToolCall } from "./types";

@@ -373,9 +373,11 @@
   *:not(.enter, .row-in, .bubble-in, .shell-in, .page-in, .mark-draw *),
   *::before,
   *::after {
+    /* biome-ignore-start lint/complexity/noImportantStyles: must beat every component's own timing */
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+    /* biome-ignore-end lint/complexity/noImportantStyles: must beat every component's own timing */
   }
 }
 
@@ -633,8 +635,8 @@
 
 /* Flat, rounded nodes to match the app's cards (Mermaid adds shadows). */
 :is(.diagram-svg, .diagram-stage) svg {
-  /* biome-ignore lint/complexity/noImportantStyles: Mermaid's own rules use ID selectors */
   & * {
+    /* biome-ignore lint/complexity/noImportantStyles: Mermaid's own rules use ID selectors */
     filter: none !important;
   }
   & .node rect {

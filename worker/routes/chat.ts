@@ -1,3 +1,6 @@
+// POST /api/chat/stream: save the user message, gather context, stream the
+// reply as SSE (with the web_search tool loop), then save the reply and run
+// the title and memory jobs after the response.
 import { Hono } from "hono";
 import { streamSSE } from "hono/streaming";
 import { ChatStreamRequest, type StreamEvent } from "../../shared/events";

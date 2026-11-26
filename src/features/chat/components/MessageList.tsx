@@ -119,7 +119,7 @@ export function MessageList({
   }, [firstId]);
 
   return (
-    // ponytail: no virtualization. History loads 50 messages at a time; at 50
+    // Limit: no virtualization. History loads 50 messages at a time; at 50
     // visual-heavy messages a streaming flush costs ~2.6ms of layout, ~11ms at
     // 120. If readers often scroll back that far, try content-visibility:auto
     // on settled rows (measured 10x cheaper) and handle its estimated heights.

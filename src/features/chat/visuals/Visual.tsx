@@ -1,3 +1,5 @@
+// Renders one visual fence (chart, plot, mermaid, …) by its tag; heavy
+// renderers load lazily, and anything invalid shows as plain code.
 import {
   ArrowsClockwiseIcon,
   CalendarDotsIcon,

@@ -1,3 +1,5 @@
+// After a reply: extract facts and memories from the user's own messages,
+// dedupe them by embedding similarity and supersede the ones they replace.
 import { z } from "zod";
 import { langOf } from "../../shared/lang";
 import type { DB } from "../db/client";
@@ -51,7 +53,7 @@ export function parseExtraction(raw: string): Extraction {
   return { facts: [], memories: [] };
 }
 
-// ponytail: similarity thresholds are a heuristic; use an LLM judge if it misfires.
+// Limit: similarity thresholds are a heuristic; use an LLM judge if it misfires.
 export const decide = (similarity: number) =>
   similarity >= 0.92
     ? "duplicate"

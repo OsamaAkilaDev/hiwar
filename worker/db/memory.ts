@@ -66,13 +66,13 @@ export const listMemories = (db: DB, userId: string) =>
     .where(and(eq(memories.userId, userId), isNull(memories.supersededBy)))
     .orderBy(desc(memories.createdAt));
 
-// ponytail: exact scan, no vector index; add HNSW once a user has ~10k memories.
+// Limit: exact scan, no vector index; add HNSW once a user has ~10k memories.
 export async function nearestMemories(
   db: DB,
   userId: string,
   vector: number[],
   model: string,
-  // ponytail: 0.5 is a starting point, tune it against real queries.
+  // Limit: 0.5 is a starting point, tune it against real queries.
   {
     limit = 5,
     minSimilarity = 0.5,

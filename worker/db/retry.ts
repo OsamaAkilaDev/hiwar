@@ -5,7 +5,7 @@ const isTransient = (error: unknown) =>
     TRANSIENT.test((e as Error | undefined)?.message ?? ""),
   );
 
-// ponytail: single retry, a real backoff policy if drops become common.
+// Limit: single retry, a real backoff policy if drops become common.
 export async function withRetry<T>(fn: () => Promise<T>): Promise<T> {
   try {
     return await fn();

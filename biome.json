@@ -11,7 +11,8 @@
       "**",
       "!worker-configuration.d.ts",
       "!src/routeTree.gen.ts",
-      "!docs/evals"
+      "!docs/evals",
+      "!**/*.md"
     ]
   },
   "formatter": {

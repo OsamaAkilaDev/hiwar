@@ -27,7 +27,7 @@ Truly bilingual by construction, not translated: per-paragraph text direction, R
 
 ## Capabilities and Constraints
 
-- Streaming replies, Stop, retry, persisted history; memory, web search, and visuals arrive in later milestones.
+- Streaming replies, Stop, retry, persisted history, cross-chat memory, web search with citations, and inline visuals (native blocks, plots, Mermaid, Graphviz, Markmap).
 - UI language follows the browser by default, with a manual AR/EN switch.
 - Theme: dark (default) and light, user-switchable.
 - Single user; no login in v1.
@@ -41,7 +41,7 @@ Truly bilingual by construction, not translated: per-paragraph text direction, R
 
 ## Evidence on Hand
 
-None yet (no logo, screenshots, or testimonials). Do not fabricate any.
+The dot-matrix ح mark (`brand/`) and the showcase video (`docs/media/hiwar.mp4`). No testimonials; do not fabricate any.
 
 ## Product Principles
 
