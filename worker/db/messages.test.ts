@@ -5,10 +5,10 @@ import { insertUserMessage, listMessages } from "./messages";
 import * as schema from "./schema";
 import { SEED_USER_ID } from "./schema";
 
-test.skipIf(!process.env.DATABASE_URL)(
+test.skipIf(!process.env.TEST_DATABASE_URL)(
   "insertUserMessage twice with the same id stores one row",
   async () => {
-    const db = createDb(process.env.DATABASE_URL as string);
+    const db = createDb(process.env.TEST_DATABASE_URL as string);
     const conversationId = crypto.randomUUID();
     const input = {
       userId: SEED_USER_ID,

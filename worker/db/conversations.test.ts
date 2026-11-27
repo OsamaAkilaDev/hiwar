@@ -10,10 +10,10 @@ import { insertUserMessage, listMessages } from "./messages";
 import * as schema from "./schema";
 import { SEED_USER_ID } from "./schema";
 
-test.skipIf(!process.env.DATABASE_URL)(
+test.skipIf(!process.env.TEST_DATABASE_URL)(
   "conversations are scoped to their user",
   async () => {
-    const db = createDb(process.env.DATABASE_URL as string);
+    const db = createDb(process.env.TEST_DATABASE_URL as string);
     const otherUserId = crypto.randomUUID();
     const [older, newer, foreign] = [
       crypto.randomUUID(),

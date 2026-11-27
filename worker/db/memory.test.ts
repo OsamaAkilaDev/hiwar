@@ -12,10 +12,10 @@ const MODEL = "test-model";
 const vector = (...head: number[]) =>
   head.concat(Array(1024 - head.length).fill(0));
 
-test.skipIf(!process.env.DATABASE_URL)(
+test.skipIf(!process.env.TEST_DATABASE_URL)(
   "nearestMemories ranks by similarity, skips superseded and other users",
   async () => {
-    const db = createDb(process.env.DATABASE_URL as string);
+    const db = createDb(process.env.TEST_DATABASE_URL as string);
     const [other] = await db
       .insert(users)
       .values({ locale: "en" })

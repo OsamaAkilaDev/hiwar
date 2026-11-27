@@ -28,7 +28,7 @@ You need [Bun](https://bun.sh), a Postgres database with the `vector` extension 
 
 ```sh
 bun install
-cp .env.example .env              # DATABASE_URL, for migrations and tests
+cp .env.example .env              # DATABASE_URL for migrations, TEST_DATABASE_URL for DB tests
 cp .dev.vars.example .dev.vars    # model and search keys for the Worker
 bun run db:migrate
 bun run dev
