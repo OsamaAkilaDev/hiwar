@@ -18,6 +18,7 @@ export const ErrorCode = z.enum([
   "server",
   "connection",
   "rate_limited",
+  "sign_in_required",
 ]);
 export type ErrorCode = z.infer<typeof ErrorCode>;
 
@@ -35,8 +36,18 @@ export const MessageDTO = z.object({
   citations: z
     .array(z.object({ title: z.string(), url: z.string() }))
     .optional(),
+  /** Client only, not stored: the picked provider, when it was busy and
+   * another one answered. */
+  fallbackFrom: z.enum(["gemini", "groq"]).optional(),
 });
 export type MessageDTO = z.infer<typeof MessageDTO>;
+
+/** The current visitor: an account (email) or a guest with messages left. */
+export type Me = {
+  email: string | null;
+  name: string | null;
+  guestLeft: number | null;
+};
 
 export const ConversationDTO = z.object({
   id: z.string(),

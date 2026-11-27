@@ -1,5 +1,6 @@
 import { Hono } from "hono";
 import { z } from "zod";
+import type { AppEnv } from "../auth";
 import { db } from "../db/client";
 import {
   deleteAllConversations,
@@ -8,7 +9,6 @@ import {
   renameConversation,
 } from "../db/conversations";
 import { listMessages } from "../db/messages";
-import { SEED_USER_ID } from "../db/schema";
 
 const PAGE_SIZE = 50;
 
@@ -43,12 +43,12 @@ function decodeCursor(cursor: string): Cursor | null {
 const notFound = { error: "not_found" } as const;
 const invalid = { error: "invalid_request" } as const;
 
-export const conversations = new Hono<{ Bindings: Env }>()
+export const conversations = new Hono<AppEnv>()
   .get("/conversations", async (c) => {
     const cursor = c.req.query("cursor");
     const before = cursor === undefined ? undefined : decodeCursor(cursor);
     if (before === null) return c.json(invalid, 400);
-    const rows = await listConversations(db(c.env), SEED_USER_ID, {
+    const rows = await listConversations(db(c.env), c.get("user").id, {
       before,
       limit: PAGE_SIZE + 1,
     });
@@ -65,7 +65,7 @@ export const conversations = new Hono<{ Bindings: Env }>()
     if (!params.success || !query.success) return c.json(invalid, 400);
     const messages = await listMessages(
       db(c.env),
-      SEED_USER_ID,
+      c.get("user").id,
       params.data.id,
       query.data,
     );
@@ -77,14 +77,14 @@ export const conversations = new Hono<{ Bindings: Env }>()
     if (!params.success || !body.success) return c.json(invalid, 400);
     const { found } = await renameConversation(
       db(c.env),
-      SEED_USER_ID,
+      c.get("user").id,
       params.data.id,
       body.data.title,
     );
     return found ? c.body(null, 204) : c.json(notFound, 404);
   })
   .delete("/conversations", async (c) => {
-    await deleteAllConversations(db(c.env), SEED_USER_ID);
+    await deleteAllConversations(db(c.env), c.get("user").id);
     return c.body(null, 204);
   })
   .delete("/conversations/:id", async (c) => {
@@ -92,7 +92,7 @@ export const conversations = new Hono<{ Bindings: Env }>()
     if (!params.success) return c.json(invalid, 400);
     const { found } = await deleteConversation(
       db(c.env),
-      SEED_USER_ID,
+      c.get("user").id,
       params.data.id,
     );
     return found ? c.body(null, 204) : c.json(notFound, 404);

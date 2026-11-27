@@ -1,6 +1,7 @@
 import type {
   ChatStreamRequest,
   ConversationList,
+  Me,
   MemorySnapshot,
   MessageDTO,
   StreamEvent,
@@ -101,3 +102,48 @@ const remove = async (path: string) => {
 export const deleteFact = (id: string) => remove(`/facts/${id}`);
 export const deleteMemory = (id: string) => remove(`/memories/${id}`);
 export const forgetAll = () => remove("");
+
+export async function getMe(signal?: AbortSignal): Promise<Me> {
+  const res = await fetch("/api/me", { signal: timed(signal) });
+  if (!res.ok) throw new HttpError(res.status);
+  return res.json();
+}
+
+/** Carries the server's error code ("email_taken", …) for the form. */
+export class AuthError extends Error {
+  constructor(readonly code: string) {
+    super(`auth failed: ${code}`);
+  }
+}
+
+export async function authenticate(
+  mode: "signin" | "signup",
+  body: { email: string; password: string; locale: string; name?: string },
+): Promise<Me> {
+  const res = await fetch(`/api/auth/${mode}`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) {
+    const data = (await res.json().catch(() => null)) as {
+      error?: string;
+    } | null;
+    throw new AuthError(data?.error ?? "server");
+  }
+  return res.json();
+}
+
+export async function signOut() {
+  const res = await fetch("/api/auth/signout", { method: "POST" });
+  if (!res.ok) throw new HttpError(res.status);
+}
+
+export async function updateName(name: string) {
+  const res = await fetch("/api/me", {
+    method: "PATCH",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ name }),
+  });
+  if (!res.ok) throw new HttpError(res.status);
+}

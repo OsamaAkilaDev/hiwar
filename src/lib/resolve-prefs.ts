@@ -11,6 +11,10 @@ export const ACCENTS = [
 ] as const;
 export type Accent = (typeof ACCENTS)[number];
 export type Model = "gemini" | "groq";
+export const MODEL_LABELS: Record<Model, string> = {
+  gemini: "Gemini 3.5 Flash-Lite",
+  groq: "GPT-OSS 120B",
+};
 
 export const resolveLocale = ({
   saved,
@@ -37,4 +41,4 @@ export const resolveAccent = (saved: string | null): Accent =>
   ACCENTS.find((a) => a === saved) ?? "teal";
 
 export const resolveModel = (saved: string | null): Model =>
-  saved === "groq" ? "groq" : "gemini";
+  saved === "gemini" ? "gemini" : "groq";

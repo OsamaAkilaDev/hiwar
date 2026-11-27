@@ -454,6 +454,48 @@
   }
 }
 
+/* Popover menus open above their trigger (the composer sits at the bottom),
+   flipping below when there's no room. */
+.menu {
+  inset: auto;
+  margin: 0 0 6px;
+  position-area: block-start span-inline-end;
+  position-try-fallbacks: flip-block;
+  overscroll-behavior: contain;
+  transform-origin: bottom left;
+  transition:
+    opacity 150ms ease-out,
+    scale 150ms ease-out,
+    display 150ms allow-discrete,
+    overlay 150ms allow-discrete;
+}
+
+[dir="rtl"] .menu {
+  transform-origin: bottom right;
+}
+
+.menu:not(:popover-open) {
+  opacity: 0;
+}
+
+@starting-style {
+  .menu:popover-open {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .menu:not(:popover-open) {
+    scale: 0.96;
+  }
+
+  @starting-style {
+    .menu:popover-open {
+      scale: 0.96;
+    }
+  }
+}
+
 /* Entrances. Reduced motion keeps only a quick fade; movement and blur are opt-in. */
 @keyframes reveal {
   from {

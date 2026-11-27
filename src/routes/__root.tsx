@@ -6,6 +6,7 @@ import {
 } from "@tanstack/react-router";
 import { useRef, useState } from "react";
 import { Header } from "../components/Header";
+import { AuthDialog } from "../features/auth/AuthDialog";
 import { SettingsDialog } from "../features/settings/components/SettingsDialog";
 import { Sidebar } from "../features/sidebar/components/Sidebar";
 import { useT } from "../i18n";
@@ -79,6 +80,7 @@ function Root() {
         open={settingsOpen}
         onClose={() => setSettingsOpen(false)}
       />
+      <AuthDialog />
       <div aria-hidden className="grain" />
     </div>
   );

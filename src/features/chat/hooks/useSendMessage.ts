@@ -5,6 +5,7 @@ import { HttpError, streamChat } from "../../../lib/api";
 import { newId } from "../../../lib/ids";
 import { usePrefs } from "../../../lib/prefs";
 import { queryKeys } from "../../../lib/query-keys";
+import { openAuth } from "../../auth/auth";
 import { type ConversationsData, patch, upsertTop } from "../../sidebar/cache";
 import { useChatStore } from "../store";
 import { createFrameFlusher } from "../stream/frame-flush";
@@ -23,6 +24,10 @@ const interrupted = (
   cause?: unknown,
 ): Partial<MessageDTO> => {
   if (signal.aborted) return { status: "stopped" };
+  if (cause instanceof HttpError && cause.status === 403) {
+    openAuth(true);
+    return { status: "error", error: "sign_in_required", retryable: true };
+  }
   const error =
     cause instanceof HttpError && cause.status === 429
       ? "rate_limited"
@@ -68,6 +73,7 @@ export function useSendMessage(conversationId: string) {
       setTimeout(() => clear(assistant.id));
     };
 
+    const picked = usePrefs.getState().model;
     try {
       const events = streamChat(
         {
@@ -77,7 +83,7 @@ export function useSendMessage(conversationId: string) {
           text: user.content,
           locale: usePrefs.getState().locale,
           memory: usePrefs.getState().memory,
-          model: usePrefs.getState().model,
+          model: picked,
         },
         abort.signal,
       );
@@ -97,7 +103,13 @@ export function useSendMessage(conversationId: string) {
             patch(data, conversationId, { title: event.title }),
           );
         else if (event.type === "done") {
-          settle(event.message);
+          settle({
+            ...event.message,
+            fallbackFrom:
+              event.message.provider && event.message.provider !== picked
+                ? picked
+                : undefined,
+          });
           ended = true;
         } else if (event.type === "error") {
           settle({
@@ -114,6 +126,7 @@ export function useSendMessage(conversationId: string) {
     } finally {
       controller.current = null;
       void queryClient.invalidateQueries({ queryKey: listKey });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.me() });
       setStreamingId(null);
     }
   };

@@ -26,11 +26,29 @@ export const messageStatus = pgEnum("message_status", [
 const createdAt = () =>
   timestamp({ withTimezone: true, precision: 3 }).notNull().defaultNow();
 
+// A user without an email is a guest: a few messages, then sign up.
 export const users = pgTable("users", {
   id: uuid().primaryKey().defaultRandom(),
   locale: text().notNull(),
+  email: text().unique(),
+  name: text(),
+  passwordHash: text(),
   createdAt: createdAt(),
 });
+
+// The id is the SHA-256 of the cookie token, so a leaked table can't sign in.
+export const sessions = pgTable(
+  "sessions",
+  {
+    id: text().primaryKey(),
+    userId: uuid()
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    expiresAt: timestamp({ withTimezone: true }).notNull(),
+    createdAt: createdAt(),
+  },
+  (t) => [index().on(t.userId)],
+);
 
 export const conversations = pgTable(
   "conversations",

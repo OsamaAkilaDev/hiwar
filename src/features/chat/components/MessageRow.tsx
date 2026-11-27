@@ -5,6 +5,7 @@ import { Mark } from "../../../components/Mark";
 import { useT } from "../../../i18n";
 import { type Citation, citedIn, domainOf } from "../../../lib/citations";
 import { dirOf, dirProps } from "../../../lib/dir";
+import { MODEL_LABELS } from "../../../lib/resolve-prefs";
 import { useChatStore } from "../store";
 import { CopyButton } from "./CopyButton";
 import { Markdown } from "./Markdown";
@@ -108,6 +109,9 @@ export const MessageRow = memo(function MessageRow({
             {message.model ? (
               <span dir="ltr" className="me-1.5">
                 {modelName(message.model)}
+                {message.fallbackFrom
+                  ? ` · ${t("modelBusy", { name: MODEL_LABELS[message.fallbackFrom] })}`
+                  : null}
               </span>
             ) : null}
             <div className="flex items-center gap-1 opacity-0 transition-opacity focus-within:opacity-100 group-hover:opacity-100 pointer-coarse:opacity-100">

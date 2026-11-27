@@ -1,11 +1,18 @@
 // POST /api/chat/stream: save the user message, gather context, stream the
 // reply as SSE (with the web_search tool loop), then save the reply and run
 // the title and memory jobs after the response.
+
 import { Hono } from "hono";
 import { streamSSE } from "hono/streaming";
 import { ChatStreamRequest, type StreamEvent } from "../../shared/events";
 import { langOf } from "../../shared/lang";
 import { encodeEvent } from "../../shared/sse";
+import {
+  type AppEnv,
+  ensureUser,
+  GUEST_MESSAGES,
+  guestMessagesUsed,
+} from "../auth";
 import { db } from "../db/client";
 import { getConversation, setConversationTitle } from "../db/conversations";
 import {
@@ -15,7 +22,6 @@ import {
   saveAssistantMessage,
 } from "../db/messages";
 import { withRetry } from "../db/retry";
-import { SEED_USER_ID } from "../db/schema";
 import { providersFromEnv, streamChat } from "../llm/gateway";
 import { LAST_WORD, systemPrompt } from "../llm/prompts/system";
 import { generateTitle } from "../llm/title";
@@ -39,7 +45,7 @@ type Payload<E = StreamEvent> = E extends unknown
   : never;
 
 // Per-IP limit so a public URL can't drain the free model quota.
-export const chat = new Hono<{ Bindings: Env }>().post(
+export const chat = new Hono<AppEnv>().post(
   "/chat/stream",
   async (c, next) => {
     const key = c.req.header("cf-connecting-ip") ?? "local";
@@ -61,9 +67,19 @@ export const chat = new Hono<{ Bindings: Env }>().post(
       model,
     } = parsed.data;
 
-    const userId = SEED_USER_ID;
     const database = db(c.env);
+    let userId: string;
     try {
+      const user = await ensureUser(c, database, locale);
+      userId = user.id;
+      // A retry resends the same message id, so it doesn't count twice.
+      if (
+        !user.email &&
+        (await guestMessagesUsed(database, userId, userMessageId)) >=
+          GUEST_MESSAGES
+      ) {
+        return c.json({ error: "sign_in_required" }, 403);
+      }
       const { found } = await withRetry(() =>
         insertUserMessage(database, {
           userId,

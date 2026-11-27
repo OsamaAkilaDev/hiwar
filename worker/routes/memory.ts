@@ -1,5 +1,6 @@
 import { Hono } from "hono";
 import { z } from "zod";
+import type { AppEnv } from "../auth";
 import { db } from "../db/client";
 import {
   deleteFact,
@@ -9,7 +10,6 @@ import {
   listMemories,
   updateFact,
 } from "../db/memory";
-import { SEED_USER_ID } from "../db/schema";
 
 const Params = z.object({ id: z.uuid() });
 const Edit = z.object({ value: z.string().trim().min(1).max(200) });
@@ -17,11 +17,11 @@ const Edit = z.object({ value: z.string().trim().min(1).max(200) });
 const notFound = { error: "not_found" } as const;
 const invalid = { error: "invalid_request" } as const;
 
-export const memory = new Hono<{ Bindings: Env }>()
+export const memory = new Hono<AppEnv>()
   .get("/memory", async (c) => {
     const [facts, memories] = await Promise.all([
-      listFacts(db(c.env), SEED_USER_ID),
-      listMemories(db(c.env), SEED_USER_ID),
+      listFacts(db(c.env), c.get("user").id),
+      listMemories(db(c.env), c.get("user").id),
     ]);
     return c.json({
       facts: facts.map((f) => ({
@@ -44,7 +44,7 @@ export const memory = new Hono<{ Bindings: Env }>()
     if (!params.success || !body.success) return c.json(invalid, 400);
     const { found } = await updateFact(
       db(c.env),
-      SEED_USER_ID,
+      c.get("user").id,
       params.data.id,
       body.data.value,
     );
@@ -53,16 +53,16 @@ export const memory = new Hono<{ Bindings: Env }>()
   .delete("/memory/facts/:id", async (c) => {
     const params = Params.safeParse(c.req.param());
     if (!params.success) return c.json(invalid, 400);
-    await deleteFact(db(c.env), SEED_USER_ID, params.data.id);
+    await deleteFact(db(c.env), c.get("user").id, params.data.id);
     return c.body(null, 204);
   })
   .delete("/memory/memories/:id", async (c) => {
     const params = Params.safeParse(c.req.param());
     if (!params.success) return c.json(invalid, 400);
-    await deleteMemory(db(c.env), SEED_USER_ID, params.data.id);
+    await deleteMemory(db(c.env), c.get("user").id, params.data.id);
     return c.body(null, 204);
   })
   .delete("/memory", async (c) => {
-    await forgetAll(db(c.env), SEED_USER_ID);
+    await forgetAll(db(c.env), c.get("user").id);
     return c.body(null, 204);
   });

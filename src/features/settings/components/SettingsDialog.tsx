@@ -10,12 +10,14 @@ import { ConfirmDialog } from "../../../components/ConfirmDialog";
 import { useT } from "../../../i18n";
 import { ar } from "../../../i18n/ar";
 import { en } from "../../../i18n/en";
+import { updateName } from "../../../lib/api";
 import { usePrefs } from "../../../lib/prefs";
 import {
   ACCENTS,
   type LocaleSetting,
   type Theme,
 } from "../../../lib/resolve-prefs";
+import { useMe, useSignOut } from "../../auth/auth";
 import { useDeleteAllConversations } from "../hooks/useDeleteAllConversations";
 import { useForgetAll } from "../hooks/useMemory";
 import { MemoryPanel } from "./MemoryPanel";
@@ -105,6 +107,8 @@ export function SettingsDialog({
     setName,
   } = usePrefs();
   const deleteAll = useDeleteAllConversations();
+  const { data: me } = useMe();
+  const signOut = useSignOut();
   const forgetAll = useForgetAll();
 
   useEffect(() => {
@@ -216,7 +220,12 @@ export function SettingsDialog({
                     defaultValue={name}
                     maxLength={40}
                     autoComplete="off"
-                    onBlur={(e) => setName(e.target.value)}
+                    onBlur={(e) => {
+                      const value = e.target.value.trim();
+                      if (value === name) return;
+                      setName(value);
+                      if (me?.email && value) updateName(value).catch(() => {});
+                    }}
                     onKeyDown={(e) =>
                       e.key === "Enter" && e.currentTarget.blur()
                     }
@@ -225,6 +234,20 @@ export function SettingsDialog({
                 </div>
               </>
             )}
+            {tab === "data" && me?.email ? (
+              <Row label={t("auth.account")} hint={me.email}>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    onClose();
+                    await signOut();
+                  }}
+                  className="h-8 rounded-lg border border-line px-3 text-sm hover:bg-surface-2"
+                >
+                  {t("auth.signOut")}
+                </button>
+              </Row>
+            ) : null}
             {tab === "data" && (
               <Row label={t("data.deleteAll")}>
                 <button

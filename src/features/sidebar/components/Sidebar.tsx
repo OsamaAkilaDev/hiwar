@@ -2,6 +2,7 @@ import {
   MagnifyingGlassIcon,
   NotePencilIcon,
   SidebarSimpleIcon,
+  SignInIcon,
 } from "@phosphor-icons/react";
 import { Link, useNavigate, useParams } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
@@ -10,6 +11,7 @@ import { ConfirmDialog } from "../../../components/ConfirmDialog";
 import { Mark } from "../../../components/Mark";
 import { useT } from "../../../i18n";
 import { usePrefs } from "../../../lib/prefs";
+import { openAuth, useMe } from "../../auth/auth";
 import { groupConversations } from "../groups";
 import { useConversations } from "../hooks/useConversations";
 import { useDeleteConversation } from "../hooks/useDeleteConversation";
@@ -49,7 +51,8 @@ export function Sidebar({ onNavigate, onCollapse, onOpenSettings }: Props) {
   const [searching, setSearching] = useState(false);
   const locale = usePrefs((s) => s.locale);
   const name = usePrefs((s) => s.name);
-  const label = name || t("you");
+  const { data: me } = useMe();
+  const label = name || me?.email || t("you");
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -213,15 +216,42 @@ export function Sidebar({ onNavigate, onCollapse, onOpenSettings }: Props) {
         )}
       </nav>
       <div className="border-line border-t p-2">
-        <button type="button" onClick={onOpenSettings} className={row}>
-          <span
-            aria-hidden
-            className="grid size-5 shrink-0 place-items-center rounded-full bg-accent font-semibold text-[0.6rem] text-accent-ink"
+        {me && !me.email ? (
+          <button
+            type="button"
+            onClick={() => {
+              onNavigate?.();
+              openAuth();
+            }}
+            className="flex w-full items-center gap-3 rounded-xl bg-accent-soft px-3 py-2.5 text-start hover:brightness-110"
           >
-            {Array.from(label)[0]?.toUpperCase()}
-          </span>
-          <span className="-my-1 truncate py-1">{label}</span>
-        </button>
+            <span className="min-w-0 flex-1">
+              <span className="block font-medium text-accent-text text-sm">
+                {t("auth.save")}
+              </span>
+              <span className="block text-muted text-xs">
+                {me.guestLeft
+                  ? t("auth.left", { n: String(me.guestLeft) })
+                  : t("auth.leftNone")}
+              </span>
+            </span>
+            <SignInIcon
+              className="size-4.5 shrink-0 text-accent-text rtl:-scale-x-100"
+              aria-hidden
+            />
+          </button>
+        ) : null}
+        {me?.email ? (
+          <button type="button" onClick={onOpenSettings} className={row}>
+            <span
+              aria-hidden
+              className="grid size-5 shrink-0 place-items-center rounded-full bg-accent font-semibold text-[0.6rem] text-accent-ink"
+            >
+              {Array.from(label)[0]?.toUpperCase()}
+            </span>
+            <span className="-my-1 truncate py-1">{label}</span>
+          </button>
+        ) : null}
       </div>
       <ConfirmDialog
         heading={

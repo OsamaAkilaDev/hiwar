@@ -9,6 +9,11 @@ type Options = {
 };
 
 // extra_content carries Gemini's thought signatures; other providers reject it.
+// Gemini 400s on a tool call without one (a call another model made), so those
+// get Google's documented placeholder.
+const NO_SIGNATURE = {
+  google: { thought_signature: "skip_thought_signature_validator" },
+};
 const toWire = (m: ChatMessage, extra: boolean) => {
   if (m.role === "tool") {
     return { role: "tool", content: m.content, tool_call_id: m.toolCallId };
@@ -21,7 +26,7 @@ const toWire = (m: ChatMessage, extra: boolean) => {
         id: c.id,
         type: "function",
         function: { name: c.name, arguments: c.args },
-        ...(extra && c.extra ? { extra_content: c.extra } : {}),
+        ...(extra ? { extra_content: c.extra ?? NO_SIGNATURE } : {}),
       })),
     };
   }
