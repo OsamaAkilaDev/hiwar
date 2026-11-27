@@ -12,6 +12,7 @@
     "test": "bun test --pass-with-no-tests",
     "check": "biome check . && tsc -b && bun test --pass-with-no-tests && vite build",
     "deploy": "vite build && wrangler deploy",
+    "deploy:ci": "drizzle-kit migrate && vite build && wrangler deploy",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "bun --env-file=.env x drizzle-kit migrate",
     "cf-typegen": "wrangler types --env-file .dev.vars.example",

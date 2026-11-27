@@ -36,9 +36,9 @@ bun run dev
 
 `LLM_PROVIDERS=mock` streams canned replies, so the UI works with no API keys at all. Set it to `gemini,groq` and add the keys for real answers. Web search needs a [Tavily](https://tavily.com) key.
 
-To deploy, create a Hyperdrive config for your database, put its id in `wrangler.jsonc`, add the keys with `wrangler secret put`, then run `bun run deploy`.
+To deploy, create a Hyperdrive config for your database, put its id in `wrangler.jsonc`, and add the keys with `wrangler secret put`.
 
-> Hiwar is single-user and has no login. Before deploying it publicly, put it behind [Cloudflare Access](https://developers.cloudflare.com/cloudflare-one/policies/access/).
+Pushes to `main` deploy through Cloudflare Workers Builds with `bun run deploy:ci`: it applies pending migrations to the production database (the `DATABASE_URL` build secret, a direct non-pooled Neon URL), then builds and deploys. A failed migration stops the deploy. Migrations run before the new code is live, so keep them additive: add columns and tables, and drop old ones only in a later release.
 
 ## Quality
 
